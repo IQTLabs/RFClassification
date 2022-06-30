@@ -1,6 +1,7 @@
 import os 
 import numpy as np
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 ## Load numerical feature files
 # Inputs:
@@ -40,3 +41,14 @@ def is_interference(file_name, int_list):
             return True
     
     return False
+
+
+# function to load array files as images
+# data in numpy array 1 or 2D
+def plot_image(data, dim, dpi):
+    fig = plt.figure(figsize=dim, dpi=dpi)
+    if len(data.shape) == 2:   # spectrogram - 2D data
+        plt.pcolormesh(data, cmap='Greys', vmin=data.min(), vmax=data.max())
+    elif len(data.shape) == 1: # psd - 1D data
+        plt.plot(data)
+        plt.show()
