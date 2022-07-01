@@ -11,8 +11,8 @@ import matplotlib.pyplot as plt
     # - nperseg: n per segment, part of the file names
     # - datestr: date feature files were generated
     
-def load_features_arr(feat_folder, feat_name, datestr, n_per_seg, interferences):
-    sub_folder_name = 'ARR_'+feat_name+'_'+str(n_per_seg)+'_'+datestr+'/'
+def load_features_arr(feat_folder, feat_name, seg_len, datestr, n_per_seg, interferences):
+    sub_folder_name = 'ARR_'+feat_name+'_'+str(n_per_seg)+'_'+str(seg_len)+'_'+datestr+'/'
     
     files = os.listdir(feat_folder+sub_folder_name)
     for i in tqdm(range(len(files))):
