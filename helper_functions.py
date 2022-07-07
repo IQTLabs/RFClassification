@@ -11,8 +11,9 @@ import matplotlib.pyplot as plt
     # - nperseg: n per segment, part of the file names
     # - datestr: date feature files were generated
     
-def load_features_arr(feat_folder, feat_name, seg_len, datestr, n_per_seg, interferences):
-    sub_folder_name = 'ARR_'+feat_name+'_'+str(n_per_seg)+'_'+str(seg_len)+'_'+datestr+'/'
+def load_features_arr(feat_folder, feat_name, seg_len, n_per_seg, interferences):
+    sub_folder_name = 'ARR_'+feat_name+'_'+str(n_per_seg)+'_'+str(seg_len)+
+'/'
     
     files = os.listdir(feat_folder+sub_folder_name)
     for i in tqdm(range(len(files))):
@@ -52,3 +53,13 @@ def plot_image(data, dim, dpi):
     elif len(data.shape) == 1: # psd - 1D data
         plt.plot(data)
         plt.show()
+        
+# function to get the number of parameters in the model        
+def get_n_params(model):
+    pp=0
+    for p in list(model.parameters()):
+        nn=1
+        for s in list(p.size()):
+            nn = nn*s
+        pp += nn
+    return pp
