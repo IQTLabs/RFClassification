@@ -4,11 +4,11 @@ import time
 import gc
 import numpy as np
 
-def atomic_benchmark_estimator(estimator, X_test, verbose=False):
+def atomic_benchmark_estimator(estimator, X_test, output_type, verbose=False):
     """Measure runtime prediction of each instance."""
     n_instances = X_test.shape[0]
     runtimes = np.zeros(n_instances, dtype=float)
-    ys = np.empty(n_instances, dtype='<U3')
+    ys = np.empty(n_instances, dtype=output_type) # '<U3' for dronedetect data
     for i in range(n_instances):
         instance = X_test[[i], :]
         start = time.time()

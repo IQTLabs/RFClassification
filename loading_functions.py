@@ -12,11 +12,10 @@ import pandas as pd
 
 ## Create a dataset class
 ## Creating a custom dataset
-
-# dataset class for both DroneDetect and DroneRF 
-class DroneData(Dataset):
+class DroneDetectData(Dataset): ## NUMBERICAL DATA
     def __init__(self, Xarr, yarr):
         self.Xarr = Xarr
+        test_list=[]
         self.le = preprocessing.LabelEncoder()
         self.le.fit(yarr.flatten())
         self.yarr = self.le.transform(yarr.flatten())
@@ -31,22 +30,6 @@ class DroneData(Dataset):
         y = torch.tensor(float(self.yarr[index]))
         return (X, y)
     
-# Load data for Drone Detect (original file from authors)
-# input: file_path
-#        t_seg: duration of the segment in miliseconds
-def load_dronedetect_raw(file_path, t_seg):
-    fs = 60e6 #60 MHz
-    f = open(file_path, "rb")                                        # open file
-    data = np.fromfile(f, dtype="float32",count=240000000)      # read the data into numpy array
-    data = data.astype(np.float32).view(np.complex64)           # view as complex
-    data_norm = (data-np.mean(data))/(np.sqrt(np.var(data)))    # normalise
-    # decide on segment lengths
-    len_seg = int(t_seg/1e3*fs)
-    n_segs = (len(data_norm))//len_seg
-    n_keep = n_segs*len_seg
-    newarr = np.array_split(data_norm[:n_keep], n_segs)                  # split the array, 100 will equate to a sample length of 20ms
-    # 10 Splits into 200ms chunks
-    return newarr, data_norm
 
 def load_dronedetect_data(feat_folder, feat_name, seg_len, n_per_seg, interferences):
 # A loading function to return a dataset variable '''
@@ -64,7 +47,7 @@ def load_dronedetect_data(feat_folder, feat_name, seg_len, n_per_seg, interferen
     # - nperseg: n per segment, part of the file names
     # - datestr: date feature files were generated
     
-def load_features_arr(feat_folder, feat_name, seg_len, n_per_seg, interferences):
+def load_dronedetect_features(feat_folder, feat_name, seg_len, n_per_seg, interferences):
     sub_folder_name = 'ARR_'+feat_name+'_'+str(n_per_seg)+'_'+str(seg_len)+'/'
     
     files = os.listdir(feat_folder+sub_folder_name)
@@ -95,8 +78,8 @@ def is_interference(file_name, int_list):
     
     return False
 
-# function to load drone rf data raw in array form
-def load_dronerf_raw(main_folder, t_seg):
+# function to load drone rf data
+def load_dronerf_data(main_folder):
     high_freq_files = os.listdir(main_folder+'High/')
     low_freq_files = os.listdir(main_folder+'Low/')
 
@@ -124,15 +107,7 @@ def load_dronerf_raw(main_folder, t_seg):
         else:
             # stack the features and ys
             rf_sig = np.vstack((rf_data_h, rf_data_l))
-            
-            # decide on segment lengths
-            len_seg = int(t_seg/1e3*fs)
-            n_segs = (len(rf_data_h))//len_seg
-#             print('len of full file:', len(rf_data_h))
-#             print('len sig:', len_seg)
-            n_keep = n_segs*len_seg
-    
-            rf_sig = np.split(rf_sig[:n_keep], n_segs, axis =1) # samples of 1e4
+            rf_sig = np.split(rf_sig, 1000, axis =1) # samples of 1e4
             Xs.append(normalize_rf(rf_sig))
 
             y_rep = np.repeat(int(low_freq_files[i][0]),1000)
@@ -153,9 +128,5 @@ def load_dronerf_raw(main_folder, t_seg):
     y4s_arr = np.array(y4s).flatten()
     y10s_arr = np.array(y10s).flatten()
     return Xs_arr, ys_arr, y4s_arr, y10s_arr
-
-# function to load drone rf data raw in array form
-# def load_dronerf_features(main_folder, feat_name):
-    
                    
                  
