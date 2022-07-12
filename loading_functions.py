@@ -25,8 +25,9 @@ class DroneData(Dataset): ## NUMBERICAL DATA
     def __getitem__(self, index):
         # all data must be in float and tensor format
         X = torch.tensor((self.Xarr[index]))
-        X = X.unsqueeze(0)
-        y = torch.tensor(float(self.yarr[index]))
+        X = X.type(torch.float)
+#         X = X.unsqueeze(0) # why
+        y = torch.tensor((self.yarr[index]))
         return (X, y)
     
 # Load data for Drone Detect (original file from authors)
