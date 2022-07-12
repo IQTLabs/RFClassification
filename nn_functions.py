@@ -3,6 +3,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 from sklearn.model_selection import KFold
+import time
+from sklearn.metrics import f1_score
 
 def runkfoldcv(model, dataset, device, k_folds, batch_size, learning_rate, num_epochs, momentum, l2reg):
     num_classes = model.num_classes
@@ -127,6 +129,7 @@ def runkfoldcv(model, dataset, device, k_folds, batch_size, learning_rate, num_e
                 for i in range(n_instances):
                     instance = inputs[i]
                     instance = instance.float()
+                    instance = torch.unsqueeze(instance, 0)
                     start = time.time()
                     starter.record()
                     yi = model(instance)
