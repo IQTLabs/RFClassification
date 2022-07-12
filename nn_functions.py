@@ -107,7 +107,7 @@ def runkfoldcv(model, dataset, device, k_folds, batch_size, learning_rate, num_e
 
         # Evaluation for this fold
         correct, total = 0, 0
-        network.eval()
+        model.eval()
         with torch.no_grad():
             starter, ender = torch.cuda.Event(enable_timing=True), torch.cuda.Event(enable_timing=True)
             runtimes_thisfold = []
