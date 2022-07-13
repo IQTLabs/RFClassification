@@ -49,8 +49,8 @@ def runkfoldcv(model, dataset, device, k_folds, batch_size, learning_rate, num_e
         criterion = nn.CrossEntropyLoss()
 
         # Initialize optimizer
-    #     optimizer = torch.optim.Adam(network.parameters(), lr=1e-4)
-        optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, weight_decay=l2reg, momentum = momentum)  
+        optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+#         optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, weight_decay=l2reg, momentum = momentum)  
 
         # Run the training loop for defined number of epochs
         for epoch in range(0, num_epochs):
@@ -175,4 +175,4 @@ def runkfoldcv(model, dataset, device, k_folds, batch_size, learning_rate, num_e
     print(f'Average F1: {mean_f1s}')
     print(f'Average Runtime: {mean_runtime} s')
     
-    return avg_acc, mean_f1s, mean_runtime
+    return mean_acc, mean_f1s, mean_runtime
