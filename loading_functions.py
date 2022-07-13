@@ -4,6 +4,7 @@ from tqdm import tqdm
 import numpy as np
 from helper_functions import *
 from sklearn import preprocessing
+from sklearn.metrics import f1_score
 import torch
 import pandas as pd
 
