@@ -49,9 +49,9 @@ def load_dronedetect_raw(file_path, t_seg):
     return newarr, data_norm
     
 
-def load_dronedetect_data(feat_folder, feat_name, seg_len, n_per_seg, interferences):
+def load_dronedetect_data(feat_folder, feat_name, seg_len, n_per_seg, output_feat, interferences):
 # A loading function to return a dataset variable '''
-    Xs_arr, y_arr = load_dronedetect_features(feat_folder, feat_name, seg_len, n_per_seg, interferences)
+    Xs_arr, y_arr = load_dronedetect_features(feat_folder, feat_name, seg_len, n_per_seg, output_feat, interferences)
             
     dataset = DroneData(Xs_arr, y_arr)
     return dataset
