@@ -30,6 +30,7 @@ Choose which features (Power Spectral Density (PSD) or Spectrogram), feature spe
 Select/Edit the directory to save features in.
 
 In array format, PSD features are saved in 1d float arrays and Spectrogram features are saved in 2D arrays with size determined by N_FFT and N_Overlap.
+
 In image format, plots of PSD and Spectrograms are saved in .jpg format without axis labels. Examples plots from DroneDetect dataset shown here:
 
 * PSD from DJI Air 2S when switched on with wifi and bluetooth interference
