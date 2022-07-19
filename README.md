@@ -18,7 +18,7 @@ If available, also locate data collected by GamutRF workers.
 ### Libraries
 * *scikit-learn*: machine learning in Python
 * *PyTorch*: machine learning & deep learning
-* *scipy*: for computing rf-based features
+* *scipy* and *matplotlib*: for computing rf-based features
 
 ## Files & Descriptions
 <img src="https://github.com/IQTLabs/RFClassification/blob/main/images/repo_structure_image_0719.jpg" alt="drawing" width="800"/>
