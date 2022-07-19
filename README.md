@@ -36,22 +36,28 @@ In image format, plots of PSD and Spectrograms are saved in .jpg format without 
 
 ### 2. Apply Models
 Run the model notebooks. *ML Approaches.ipynb* include PSD feature + SVM model derived from [Drone classification using RF signal based spectral features](https://www.sciencedirect.com/science/article/pii/S2215098621001403).
-*DL Approaches.ipynb* include transfer learning models using features generated from spectrogram and PSD through trained VGG/ResNet and LR model. These models are from The Effect of Real-World Interference on CNN Feature Extraction and Machine Learning Classification of Unmanned Aerial Systems and Unmanned Aerial Vehicle Operating Mode Classification Using Deep Residual Learning Feature Extraction.
+
+*DL Approaches.ipynb* include transfer learning models using features generated from spectrogram and PSD through trained VGG/ResNet and LR model. These models are from [The Effect of Real-World Interference on CNN Feature Extraction and Machine Learning Classification of Unmanned Aerial Systems](https://www.proquest.com/openview/ff99105f660c7fe97afae45f8a384c04/1?pq-origsite=gscholar&cbl=2032442#:~:text=In%20the%20presence%20of%20interference,mode%20classification%20(21%20classes)) and [Unmanned Aerial Vehicle Operating Mode Classification Using Deep Residual Learning Feature Extraction](https://www.mdpi.com/2226-4310/8/3/79).
+
 *RFUAV-Net.ipynb* incldue an implementation of a 1D convolution model named RFUAV Net from [RF-UAVNet: High-Performance Convolutional Network for RF-Based Drone Surveillance Systems](https://ieeexplore.ieee.org/document/9768809)
 
-## Preliminary Results
-**** to be completed
+## Result Highlights
+**** preliminary, to be completed
 
 ### Binary Drone Detection Results
-| Dataset | Model                | Accuracy | F1 Score | Inference Time |
-|---------|----------------------|----------|----------|----------------|
-| DroneRF | PSD(NFFT=1024) + SVM | 1        | 1        | 0.13ms         |
-|         |                      |          |          |                |
-|         |                      |          |          |                |
+| Dataset | Sample Length | Model                           | Accuracy | F1 Score | Inference Time |
+|---------|---------------|---------------------------------|----------|----------|----------------|
+| DroneRF | 50ms          | PSD(NFFT=1024) + SVM            | 1        | 1        | 0.13ms         |
+| DroneRF | 0.025ms       | Raw data + 1D Conv (RF-UAV Net) | 0.996    | 0.994    | 1.48ms         |
+|         |               |                                 |          |          |                |
+
 
 ### Multiclass Drone Type Classification Results
-| Dataset | Model                | Accuracy | F1 Score | Inference Time |
-|---------|----------------------|----------|----------|----------------|
-| DroneDetect | PSD(NFFT=512) + SVM | 0.94        | 0.94        | 0.66ms         |
-|         |                      |          |          |                |
-|         |                      |          |          |                |
+| Dataset | Sample Length | Model                           | Accuracy | F1 Score | Inference Time |
+|---------|---------------|---------------------------------|----------|----------|----------------|
+| DroneDetect | 200ms          | PSD(NFFT=512) + SVM | 0.94        | 0.94        | 0.66ms         |
+| DroneDetect | 20ms       | PSD(NFFT=1024)+VGG16+LR                     |          |          |                |
+|         |               |                                 |          |          |                |
+
+## Comparison of Model Parameters
+*** to be completed
