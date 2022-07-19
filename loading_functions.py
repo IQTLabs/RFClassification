@@ -7,6 +7,7 @@ from sklearn import preprocessing
 from sklearn.metrics import f1_score
 import torch
 import pandas as pd
+import cv2
 
 # functions for loading data and pytorch dataset classes
 
@@ -49,9 +50,9 @@ def load_dronedetect_raw(file_path, t_seg):
     return newarr, data_norm
     
 
-def load_dronedetect_data(feat_folder, feat_name, seg_len, n_per_seg, output_feat, interferences):
+def load_dronedetect_data(feat_folder, feat_name, seg_len, n_per_seg, feat_format, output_feat, interferences):
 # A loading function to return a dataset variable '''
-    Xs_arr, y_arr = load_dronedetect_features(feat_folder, feat_name, seg_len, n_per_seg, output_feat, interferences)
+    Xs_arr, y_arr = load_dronedetect_features(feat_folder, feat_name, seg_len, n_per_seg, feat_format, output_feat, interferences)
             
     dataset = DroneData(Xs_arr, y_arr)
     return dataset
@@ -65,27 +66,63 @@ def load_dronedetect_data(feat_folder, feat_name, seg_len, n_per_seg, output_fea
     # - nperseg: n per segment, part of the file names
     # - datestr: date feature files were generated
     
-def load_dronedetect_features(feat_folder, feat_name, seg_len, n_per_seg, output_feat, interferences):
-    sub_folder_name = 'ARR_'+feat_name+'_'+str(n_per_seg)+'_'+str(seg_len)+'/'
-    
+def load_dronedetect_features(feat_folder, feat_name, seg_len, n_per_seg, feat_format, label_name, interferences):
+    sub_folder_name = feat_format+'_'+feat_name+'_'+str(n_per_seg)+'_'+str(seg_len)+'/'
+    augmented_int = aug_int(interferences) # map interference names to codes
     files = os.listdir(feat_folder+sub_folder_name)
     for i in tqdm(range(len(files))):
         fi = files[i]
         
         if is_interference(fi, interferences):
-            DATA = np.load(feat_folder+sub_folder_name+fi, allow_pickle=True).item()
+            if feat_format == 'ARR':
+                DATA = np.load(feat_folder+sub_folder_name+fi, allow_pickle=True).item()
+                Feat = DATA['feat']
+                Label = DATA[label_name]
+                Label = Label.reshape(len(Label),1)
+            elif feat_format == 'IMG':
+                DATA = cv2.imread(feat_folder+sub_folder_name+fi)
+                Feat = DATA
+                Feat = np.expand_dims(Feat, axis=0)
+                Label = get_label(fi, label_name)
+                Label = np.array(Label)
+#             print(Feat.shape)
             try:
-                Xs_arr = np.concatenate((Xs_arr, DATA['feat']),axis=0)
+                Xs_arr = np.concatenate((Xs_arr, Feat),axis=0)
 #                 print('concatenated')
-                y_arr = np.vstack((y_arr, DATA[output_feat].reshape(len(DATA[output_feat]),1)))
+                y_arr = np.vstack((y_arr, Label))
+#                 print('stacked')
             except: # if the files have not been created yet
-                Xs_temp = DATA['feat']
-                y_temp = DATA[output_feat].reshape(len(DATA[output_feat]),1)
-                if Xs_temp.shape[0]>5 and y_temp.shape[0]>5: # some files are not properly saved (omit for now)
-                    Xs_arr = Xs_temp
-                    y_arr = y_temp
+                Xs_temp = Feat
+                y_temp = Label
+#                 if Xs_temp.shape[0]>5 and y_temp.shape[0]>5: # some files are not properly saved (omit for now)
+                Xs_arr = Xs_temp
+                y_arr = y_temp
    
     return Xs_arr, y_arr
+
+# return the label based on file name
+# image file names saved in DRONE+'_'+COND+'_'+INT+'_'+FIn+'_'+str(counter)+'.jpg' format
+def get_label(filename, label_name):
+    if label_name == 'drones':
+        return filename[:3]
+    if label_name == 'conds':
+        return filename[4:6]
+    if label_name == 'ints':
+        return filename[7:9]
+    return None
+    
+def aug_int(interferences):
+#     00 for a clean signal, 01 for Bluetooth only, 10 for Wi-Fi only and 11 for Bluetooth and Wi-Fi interference concurrently.
+    if 'CLEAN' in interferences:
+        interferences.append('00')
+    if 'BLUE' in interferences:
+        interferences.append('01')
+    if 'WIFI' in interferences:
+        interferences.append('10')
+    if 'BOTH' in interferences:
+        interferences.append('11')
+    return interferences
+
 
 def is_interference(file_name, int_list):
     for f in int_list:
@@ -93,6 +130,18 @@ def is_interference(file_name, int_list):
             return True
     
     return False
+
+
+# def load_drone_detect_images(feat_folder, feat_name, seg_len, n_per_seg, output_feat, interferences):
+#     sub_folder_name = 'IMG_'+feat_name+'_'+str(n_per_seg)+'_'+str(seg_len)+'/'
+    
+#     files = os.listdir(feat_folder+sub_folder_name)
+#     for i in tqdm(range(len(files))):
+#         fi = files[i]
+        
+#         if is_interference(fi, interferences):
+#             img = cv2.imread(feat_folder+sub_folder_name+fi)
+            
 
 # function to load drone rf data raw in array form
 def load_dronerf_raw(main_folder, t_seg):
