@@ -32,7 +32,11 @@ Select/Edit the directory to save features in.
 In array format, PSD features are saved in 1d float arrays and Spectrogram features are saved in 2D arrays with size determined by N_FFT and N_Overlap.
 In image format, plots of PSD and Spectrograms are saved in .jpg format without axis labels. Examples plots from DroneDetect dataset shown here:
 
-*** Insert images ***
+* PSD from DJI Air 2S when switched on with wifi and bluetooth interference
+<img src="https://github.com/IQTLabs/RFClassification/blob/main/images/AIR_ON_11_00_60.jpg" alt="drawing" width="250"/>
+
+* Spectrogram from DJI Air 2S when switched on with wifi interference
+<img src="https://github.com/IQTLabs/RFClassification/blob/main/images/AIR_ON_10_04_87.jpg" alt="drawing" width="250"/>
 
 ### 2. Apply Models
 Run the model notebooks. *ML Approaches.ipynb* include PSD feature + SVM model derived from [Drone classification using RF signal based spectral features](https://www.sciencedirect.com/science/article/pii/S2215098621001403).
