@@ -22,7 +22,37 @@ If available, also locate data collected by GamutRF workers.
 
 ## Files & Descriptions
 The files in this repository can be grouped into the following categories.
-<img src="https://github.com/IQTLabs/RFClassification/blob/main/images/repo_structure_image_0719.jpg" alt="drawing" width="800"/>
+- **Feature Generation Notebooks**
+  - *Generate DroneDetect Features.ipynb*
+    - generate PSD, spectrogram features from DroneDetect I/Q data
+  - *Generate DroneRF Features.ipynb*
+    - Generate PSD, spectrogram features from DroneRF real data
+  - *Generate GamutRF Features.ipynb*
+    - Generate PSD, spectrogram from field day data collected by GamutRF
+
+- **Model Notebooks** (preliminary model exploration)
+  - *ML Approaches.ipynb*
+    - PSD features + SVM
+  - *DL Approaches.ipynb*
+    - VGG/Resnet + LR
+  - *RFUAV-Net.ipynb*
+    - 1DConv model from RFUAVNet paper
+  - *Kilic Paper Implementation.ipynb
+    - Kilic2021 paper implementation (containing both feature generation and model implementation)
+
+- **Helper funcutions**
+  - *helper_functions.py*
+    - data plotting & other misc tasks
+  - *latency_functions.py*
+    - measure inference time
+  - *loading_functions.py*
+    - load PSD, spectrogram features and raw data from all datasets
+  - *nn_functions.py*
+    - run k-fold CV for PyTorch-based models
+ 
+ - **tests/** directory
+    - test scripts for development
+    
 
 ## How to run
 ### 1. Generate Features
