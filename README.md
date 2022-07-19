@@ -21,7 +21,7 @@ If available, also locate data collected by GamutRF workers.
 * *scipy*: for computing rf-based features
 
 ## Files & Descriptions
-*** to insert image ***
+<img src="https://github.com/IQTLabs/RFClassification/blob/main/images/repo_structure_image_0719.jpg" alt="drawing" width="800"/>
 
 ## How to run
 ### 1. Generate Features
@@ -41,6 +41,7 @@ Run the model notebooks. *ML Approaches.ipynb* include PSD feature + SVM model d
 
 ## Preliminary Results
 **** to be completed
+
 ### Binary Drone Detection Results
 | Dataset | Model                | Accuracy | F1 Score | Inference Time |
 |---------|----------------------|----------|----------|----------------|
