@@ -21,6 +21,7 @@ If available, also locate data collected by GamutRF workers.
 * *scipy* and *matplotlib*: for computing rf-based features
 
 ## Files & Descriptions
+The files in this repository can be grouped into the following categories.
 <img src="https://github.com/IQTLabs/RFClassification/blob/main/images/repo_structure_image_0719.jpg" alt="drawing" width="800"/>
 
 ## How to run
