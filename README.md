@@ -41,11 +41,13 @@ In image format, plots of PSD and Spectrograms are saved in .jpg format without 
 <img src="https://github.com/IQTLabs/RFClassification/blob/main/images/AIR_ON_10_04_87.jpg" alt="drawing" width="250"/>
 
 ### 2. Apply Models
-Run the model notebooks. *ML Approaches.ipynb* include PSD feature + SVM model derived from [Drone classification using RF signal based spectral features](https://www.sciencedirect.com/science/article/pii/S2215098621001403).
+Run the model notebooks, which loads features (& normalize if applicable), preform train-test split, train and test models.
 
-*DL Approaches.ipynb* include transfer learning models using features generated from spectrogram and PSD through trained VGG/ResNet and LR model. These models are from [The Effect of Real-World Interference on CNN Feature Extraction and Machine Learning Classification of Unmanned Aerial Systems](https://www.proquest.com/openview/ff99105f660c7fe97afae45f8a384c04/1?pq-origsite=gscholar&cbl=2032442#:~:text=In%20the%20presence%20of%20interference,mode%20classification%20(21%20classes)) and [Unmanned Aerial Vehicle Operating Mode Classification Using Deep Residual Learning Feature Extraction](https://www.mdpi.com/2226-4310/8/3/79).
+*ML Approaches.ipynb* uses PSD feature + SVM model derived from [Drone classification using RF signal based spectral features](https://www.sciencedirect.com/science/article/pii/S2215098621001403).
 
-*RFUAV-Net.ipynb* incldue an implementation of a 1D convolution model named RFUAV Net from [RF-UAVNet: High-Performance Convolutional Network for RF-Based Drone Surveillance Systems](https://ieeexplore.ieee.org/document/9768809)
+*DL Approaches.ipynb* includes transfer learning models using features from inputting spectrogram and PSD images to trained VGG/ResNet models and then applying logistic regression. These models are from [The Effect of Real-World Interference on CNN Feature Extraction and Machine Learning Classification of Unmanned Aerial Systems](https://www.proquest.com/openview/ff99105f660c7fe97afae45f8a384c04/1?pq-origsite=gscholar&cbl=2032442#:~:text=In%20the%20presence%20of%20interference,mode%20classification%20(21%20classes)) and [Unmanned Aerial Vehicle Operating Mode Classification Using Deep Residual Learning Feature Extraction](https://www.mdpi.com/2226-4310/8/3/79).
+
+*RFUAV-Net.ipynb* includes an implementation of a 1D convolution network named RFUAV Net from [RF-UAVNet: High-Performance Convolutional Network for RF-Based Drone Surveillance Systems](https://ieeexplore.ieee.org/document/9768809). Raw DroneRF data is used for this model.
 
 ## Result Highlights
 **** preliminary, to be completed
