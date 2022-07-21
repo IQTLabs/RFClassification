@@ -11,6 +11,41 @@ import cv2
 
 # functions for loading data and pytorch dataset classes
 
+class DroneDetectTorch(Dataset): ## NUMBERICAL DATA
+    def __init__(self, feat_folder, feat_name, seg_len, n_per_seg, feat_format, output_feat, interferences):
+        self.feat_format = feat_format
+        self.output_feat = output_feat
+        self.dir_name = feat_folder+feat_format+'_'+feat_name+'_'+str(n_per_seg)+'_'+str(seg_len)+'/'
+        files = os.listdir(self.dir_name)
+        files = [fi for fi in files if is_interference(fi, interferences)]
+        self.files = files
+        
+        unique_labels = sorted(list(set([get_label(fi, self.output_feat) for fi in self.files])))
+        self.unique_labels = unique_labels
+        self.class_to_idx = {lbl:i for i,lbl in enumerate(self.unique_labels)}
+        self.idx_to_class = {i:lbl for i,lbl in enumerate(self.unique_labels)}
+        
+    def __len__(self):
+        return len(self.files)
+    
+    def __getitem__(self, i):
+        # all data must be in float and tensor format
+        
+        if self.feat_format == 'ARR':
+            DATA = np.load(self.dir_name+self.files[i], allow_pickle=True).item()
+            Feat = DATA['feat']
+            Label = DATA[self.output_feat]
+            #Label = Label.reshape(len(Label),1)
+        elif self.feat_format == 'IMG':
+            DATA = cv2.imread(self.dir_name+self.files[i])
+            DATA = cv2.cvtColor(DATA, cv2.COLOR_BGR2RGB)
+            Feat = DATA/255
+            #Feat = np.expand_dims(Feat, axis=0)
+            Label = self.class_to_idx[get_label(self.files[i], self.output_feat)]
+            #Label = np.array(Label)
+                
+        return Feat,Label
+    
 
 ## Create a dataset class
 ## Creating a custom dataset
@@ -26,7 +61,7 @@ class DroneData(Dataset): ## NUMBERICAL DATA
     
     def __getitem__(self, index):
         # all data must be in float and tensor format
-        X = torch.tensor((self.Xarr[index]))
+        X = torch.tensor((self.Xarr[index]))/255
         X = X.type(torch.float)
 #         X = X.unsqueeze(0) # why
         y = torch.tensor((self.yarr[index]))
@@ -53,7 +88,6 @@ def load_dronedetect_raw(file_path, t_seg):
 def load_dronedetect_data(feat_folder, feat_name, seg_len, n_per_seg, feat_format, output_feat, interferences):
 # A loading function to return a dataset variable '''
     Xs_arr, y_arr = load_dronedetect_features(feat_folder, feat_name, seg_len, n_per_seg, feat_format, output_feat, interferences)
-            
     dataset = DroneData(Xs_arr, y_arr)
     return dataset
 
@@ -67,13 +101,15 @@ def load_dronedetect_data(feat_folder, feat_name, seg_len, n_per_seg, feat_forma
     # - datestr: date feature files were generated
     
 def load_dronedetect_features(feat_folder, feat_name, seg_len, n_per_seg, feat_format, label_name, interferences):
+    print(interferences)
     sub_folder_name = feat_format+'_'+feat_name+'_'+str(n_per_seg)+'_'+str(seg_len)+'/'
-    augmented_int = aug_int(interferences) # map interference names to codes
+    #augmented_int = aug_int(interferences) # map interference names to codes
     files = os.listdir(feat_folder+sub_folder_name)
     for i in tqdm(range(len(files))):
         fi = files[i]
-        
+
         if is_interference(fi, interferences):
+            print(files[i])
             if feat_format == 'ARR':
                 DATA = np.load(feat_folder+sub_folder_name+fi, allow_pickle=True).item()
                 Feat = DATA['feat']
@@ -81,6 +117,7 @@ def load_dronedetect_features(feat_folder, feat_name, seg_len, n_per_seg, feat_f
                 Label = Label.reshape(len(Label),1)
             elif feat_format == 'IMG':
                 DATA = cv2.imread(feat_folder+sub_folder_name+fi)
+                DATA = cv2.cvtColor(DATA, cv2.COLOR_BGR2RGB)
                 Feat = DATA
                 Feat = np.expand_dims(Feat, axis=0)
                 Label = get_label(fi, label_name)
@@ -91,12 +128,16 @@ def load_dronedetect_features(feat_folder, feat_name, seg_len, n_per_seg, feat_f
 #                 print('concatenated')
                 y_arr = np.vstack((y_arr, Label))
 #                 print('stacked')
+
+
             except: # if the files have not been created yet
                 Xs_temp = Feat
                 y_temp = Label
 #                 if Xs_temp.shape[0]>5 and y_temp.shape[0]>5: # some files are not properly saved (omit for now)
                 Xs_arr = Xs_temp
                 y_arr = y_temp
+            
+            
    
     return Xs_arr, y_arr
 
@@ -112,6 +153,7 @@ def get_label(filename, label_name):
     return None
     
 def aug_int(interferences):
+    
 #     00 for a clean signal, 01 for Bluetooth only, 10 for Wi-Fi only and 11 for Bluetooth and Wi-Fi interference concurrently.
     if 'CLEAN' in interferences:
         interferences.append('00')
@@ -124,10 +166,18 @@ def aug_int(interferences):
     return interferences
 
 
+interference_map = {'CLEAN':'00', 'BLUE':'01', 'WIFI':'10', 'BOTH':'11'}
+
 def is_interference(file_name, int_list):
+    
     for f in int_list:
-        if file_name.find(f)!=-1:
-            return True
+        try: 
+            if file_name.split('_')[2] == interference_map[f]: 
+            #if file_name.find(interference_map[f])!=-1:
+                
+                return True
+        except: 
+            pass
     
     return False
 
