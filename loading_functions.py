@@ -10,7 +10,78 @@ import pandas as pd
 import cv2
 
 # functions for loading data and pytorch dataset classes
-
+class DroneDetectTorch(Dataset): ## NUMBERICAL DATA
+    def __init__(self, feat_folder, feat_name, seg_len, n_per_seg, feat_format, output_feat, interferences):
+        self.feat_format = feat_format
+        self.output_feat = output_feat
+        self.dir_name = feat_folder+feat_format+'_'+feat_name+'_'+str(n_per_seg)+'_'+str(seg_len)+'/'
+        print('Directory Name: ', self.dir_name)
+        files = os.listdir(self.dir_name)
+        files = [fi for fi in files if is_interference(fi, interferences)]
+        self.files = files
+        
+        unique_labels = sorted(list(set([get_label(fi, self.output_feat) for fi in self.files])))
+        self.unique_labels = unique_labels
+        self.class_to_idx = {lbl:i for i,lbl in enumerate(self.unique_labels)}
+        self.idx_to_class = {i:lbl for i,lbl in enumerate(self.unique_labels)}
+        
+        # get the length of each of the files (multiple samples in each file
+        self.fi_lens = np.zeros(len(self.files))
+        if self.feat_format == 'ARR':
+            for i, fi in enumerate(self.files):
+                DATA = np.load(self.dir_name+self.files[i], allow_pickle=True).item()['feat']
+                try:
+                    self.fi_lens[i] = self.fi_lens[i-1]+len(DATA)  
+                except:
+                    self.fi_lens[i] = len(DATA)
+            self.fi_lens = self.fi_lens.astype(int)
+            
+        
+    def __len__(self):
+        if self.feat_format == 'IMG':
+            return len(self.files) # one image per file
+        else:
+            return self.fi_lens[-1]
+    
+    def __getitem__(self, i):
+        if isinstance(i, int):
+            # if single integer
+            return self.__getitemsingle__(i)
+        ft_ls = []
+        lb_ls = []
+        for ii in i:
+            ft, lb = self.__getitemsingle__(ii)
+            ft_ls.append(ft)
+            lb_ls.append(lb)
+        
+        return np.array(ft_ls), np.array(lb_ls)
+    
+    def __getitemsingle__(self, i):
+        # all data must be in float and tensor format
+        
+        if self.feat_format == 'ARR':
+            # convert i to file number and index within file
+            i_file = np.argwhere(self.fi_lens>i)[0][0]
+#             print(i_file)
+            DATA = np.load(self.dir_name+self.files[i_file], allow_pickle=True).item()
+            
+            i_infile = int(len(DATA['feat'])- (self.fi_lens[i_file]-i))
+#             print(i_infile)
+            Feat = DATA['feat'][i_infile]
+            # apply norm
+            Feat = Feat/np.max(Feat)
+            Label = DATA[self.output_feat][i_infile]
+            #Label = Label.reshape(len(Label),1)
+        elif self.feat_format == 'IMG':
+            DATA = cv2.imread(self.dir_name+self.files[i])
+            DATA = cv2.cvtColor(DATA, cv2.COLOR_BGR2RGB)
+            Feat = DATA/255
+            Feat = torch.tensor(Feat).float()
+            #Feat = np.expand_dims(Feat, axis=0)
+            Label = self.class_to_idx[get_label(self.files[i], self.output_feat)]
+            #Label = np.array(Label)
+                
+        return Feat,Label
 
 ## Create a dataset class
 ## Creating a custom dataset
@@ -123,11 +194,16 @@ def aug_int(interferences):
         interferences.append('11')
     return interferences
 
+interference_map = {'CLEAN':'00', 'BLUE':'01', 'WIFI':'10', 'BOTH':'11'}
 
 def is_interference(file_name, int_list):
     for f in int_list:
-        if file_name.find(f)!=-1:
-            return True
+        try:
+            if file_name.split('_')[2] == interference_map[f] or file_name.find(f)!=-1: 
+#         if file_name.find(f)!=-1:
+                return True
+        except:
+            pass
     
     return False
 
