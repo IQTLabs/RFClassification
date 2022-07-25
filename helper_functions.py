@@ -7,13 +7,19 @@ import matplotlib.pyplot as plt
 # function to load array files as images
 # data in numpy array 1 or 2D
 # inputs: data, dimensions in pixels, and dpi
-def plot_feat(data, dim_pix, dpi): 
+def plot_feat(data, dim_pix, dpi, to_show=True, show_axis=True): 
     fig = plt.figure(figsize=(dim_pix[0]/dpi, dim_pix[1]/dpi), dpi=dpi)
+    plt.ioff()
     if len(data.shape) == 2:   # spectrogram - 2D data
         plt.pcolormesh(data, cmap='viridis', vmin=data.min(), vmax=data.max())
     elif len(data.shape) == 1: # psd - 1D data
         plt.plot(data)
-        plt.show()
+        if not show_axis:
+            plt.axis('off')
+        if to_show:
+            plt.show()
+        else:
+            plt.close(fig)
     return fig
         
 # function to get the number of parameters in the model        
