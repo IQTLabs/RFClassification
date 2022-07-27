@@ -2,7 +2,7 @@ import os
 import numpy as np
 from tqdm import tqdm
 import matplotlib.pyplot as plt
-
+import importlib
 
 # function to load array files as images
 # data in numpy array 1 or 2D
@@ -40,13 +40,23 @@ def normalize_rf(rf):
     for i in range(len(rf)):
         rfnorm_i = np.zeros(rf[i].shape)
         for j in range(2):
-#             print(rf[i][j])
             r = (np.max(rf[i][j])-np.min(rf[i][j]))
-#             print('range:', r)
             m = np.min(rf[i][j])
-#             print('m:', m)abs
             rfnorm_i[j] = (rf[i][j]-m)/r
-#             print(rfnorm_i[j])
         rfnorm.append(rfnorm_i)
 
     return rfnorm
+
+
+## function to reload package when developing
+## packagename in string
+# def reload_package(packagename):
+# #     importcom = 'import '+packagename
+# #     eval(importcom)
+#     importlib.import_module(packagename)
+#     importlib.reload(packagename)
+# #     importlibcom = 'importlib.reload('+packagename+')'
+# #     eval(importlibcom)
+#     reload_com = 'from '+packagename+ ' import *'
+#     eval(reload_com)
+# #     from helper_functions import *
