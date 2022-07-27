@@ -98,4 +98,13 @@ Run the model notebooks, which loads features (& normalize if applicable), prefo
 |         |               |                                 |          |          |                |
 
 ## Comparison of Model Parameters
-*** to be completed
+For PSD+SVM model with DroneDetect data for drone time classification, we compared the performance of model with different sample lengths and FFT lengths.
+The preliminary results show, the higher the NFFT and longer the time segment, the better the model performance. However, it is important to note that the models with longer time segments also have fewer sample points.
+|       | NFFT = 256 | NFFT = 512 | NFFT = 1024 | 
+|-------|------------|------------|-------------|
+| 10 ms | 0.80       | 0.81       | 0.82        |
+| 20 ms | 0.84       | 0.85       | 0.85        |
+| 50 ms | 0.88       | 0.89       | 0.89        | 
+
+
+
