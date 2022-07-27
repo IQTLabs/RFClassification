@@ -4,13 +4,50 @@ Compute & save prediction features from gamutRF collected samples
 
 from scipy import signal
 import numpy as np
+from helper_functions import *
 
 def get_PSD_from_samples(samples, fs, win_type, n_per_seg):
-    psd_return = []
+#     psd_return = []
     for i, s in enumerate(samples):
-        fpsd, Pxx_den = signal.welch(s, fs, window=win_type, nperseg=n_per_seg)
-        psd_return.append(Pxx_den)
-    return fpsd, np.array(psd_return) # frequency range should be the same for each sample
+        fpsd, Pxx_den = signal.welch(s, fs, window=win_type, nperseg=n_per_seg, return_onesided=False)
+        # return one sided is false given input data is complex
+#         Pxx_den = Pxx_den.reshape((1,len(Pxx_den)))
+        try:
+            if len(Pxx_den)==n_per_seg:
+                psd_return = np.vstack((psd_return, Pxx_den))
+        except:
+            psd_return = Pxx_den
+    return fpsd, psd_return # frequency range should be the same for each sample
+
+# generate spectrogram from samples generator object
+# if return spec in rgb arrays, use return_array= True, otherwise return a figure list
+def get_specs_from_samples(samples, fs, n_per_seg, return_array, dim_px=(224,224), dpi=100, noverlap=120):
+    if return_array:
+        rbg_ls = []
+    else:
+        fig_ls = []
+    for i, sa in enumerate(samples):
+        plt.close()
+        fig,ax = plt.subplots(1, figsize=(dim_px[0]/dpi, dim_px[1]/dpi), dpi=dpi)
+        fig.subplots_adjust(left=0,right=1,bottom=0,top=1)
+        ax.axis('tight')
+        ax.axis('off')
+        spec, _, _, _ = plt.specgram(sa, NFFT=n_per_seg, Fs=fs,
+                                     noverlap=120, sides='onesided') # use default window
+        if return_array:
+            rgba = fig2data(fig)
+            rgb = rgba[:,:,:3]
+            rbg_ls.append(rgb)
+        else:
+            fig_ls.append(fig)
+            
+    if return_array:
+        rbg_return = np.stack(rbg_ls, axis=0)
+        return rbg_return
+    else:
+        return fig_ls
+    
+    
 
 # saving options
 def save_psd_array(freqs, psd_array, full_file):
@@ -35,11 +72,11 @@ def save_psd_array(freqs, psd_array, full_file):
         os.mkdir(folder_name_full)
         np.save(new_name, data_save)
 
-def save_psd_img(psd_array, dim_px, dpi, full_file):
+def save_psd_img(psd_array, dim_px, dpi, full_file, folder_name):
 #     def save_psd_image(folder_path, cond_folder, DRONE, COND, INT, FIn, counter, PSD, dim_px, dpi):
 #     plt.clf()
 #     plt.plot(f, PSD, 'k')
-    folder_name = 'Features/PSD_IMG/'
+#     folder_name = 'Features/PSD_IMG_'/'
     ss = full_file.split('/')
     ss[-1] = folder_name+'/psd_'+ss[-1]
     new_name =  '/'.join(ss)

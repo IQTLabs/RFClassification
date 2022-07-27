@@ -47,6 +47,29 @@ def normalize_rf(rf):
 
     return rfnorm
 
+## convert figure object to 3channel array
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+
+def fig2data ( fig ):
+    """
+    @brief Convert a Matplotlib figure to a 4D numpy array with RGBA channels 
+     and return it
+    @param fig a matplotlib figure
+    @return a numpy 3D array of RGBA values
+    """
+
+    canvas = FigureCanvasAgg(fig)
+    # draw the renderer
+    fig.canvas.draw ( )
+    # Get the RGBA buffer from the figure
+    w,h = fig.canvas.get_width_height()
+    buf = np.fromstring ( fig.canvas.tostring_argb(), dtype=np.uint8 )
+    buf.shape = ( w, h,4 )
+    # canvas.tostring_argb give pixmap in ARGB mode. Roll the ALPHA channel to 
+#      have it in RGBA mode
+    buf = np.roll ( buf, 3, axis = 2 )
+    return buf
+
 
 ## function to reload package when developing
 ## packagename in string
