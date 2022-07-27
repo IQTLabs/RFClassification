@@ -64,7 +64,7 @@ def runkfoldcv(model, dataset, device, k_folds, batch_size, learning_rate, num_e
             for i, data in enumerate(trainloader):
                 # Get inputs
                 inputs, targets = data
-                inputs = inputs.float()
+#                 inputs = inputs.float()
                 targets= targets.type(torch.long)
 
                 # Move tensors to configured device

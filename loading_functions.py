@@ -44,7 +44,7 @@ class DroneDetectTorch(Dataset): ## NUMBERICAL DATA
             return self.fi_lens[-1]
     
     def __getitem__(self, i):
-        if isinstance(i, int):
+        if not isinstance(i, list):
             # if single integer
             return self.__getitemsingle__(i)
         ft_ls = []
@@ -259,9 +259,9 @@ def load_dronerf_raw(main_folder, t_seg):
             rf_sig = np.split(rf_sig[:n_keep], n_segs, axis =1) # samples of 1e4
             Xs.append(normalize_rf(rf_sig))
 
-            y_rep = np.repeat(int(low_freq_files[i][0]),1000)
-            y4_rep = np.repeat(int(low_freq_files[i][:3]),1000)
-            y10_rep = np.repeat(int(low_freq_files[i][:5]),1000)
+            y_rep = np.repeat(int(low_freq_files[i][0]),n_keep)
+            y4_rep = np.repeat(int(low_freq_files[i][:3]),n_keep)
+            y10_rep = np.repeat(int(low_freq_files[i][:5]),n_keep)
 
             ys.append(y_rep) # 2 class
             y4s.append(y4_rep) # 4 class
