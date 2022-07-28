@@ -13,12 +13,11 @@ import argparse
 import matplotlib.pyplot as plt 
 from Torch_Models import *
 
+model_folder = '../../saved_models/'
 
 def run_psd_svm(n_per_seg, t_seg):
-#     n_per_seg = 256
-#     t_seg = 20
-    model_folder = '../../saved_models/'
-    model_file = 'SVM_PSD_'+str(n_per_seg)+'_'+str(t_seg)+'_1'
+    
+    model_file = 'PSD_SVM_'+str(n_per_seg)+'_'+str(t_seg)+'_1'
     win_type = 'hamming'
 
     model = pickle.load(open(model_folder+model_file, 'rb'))
@@ -35,7 +34,7 @@ def run_psd_svm(n_per_seg, t_seg):
             start_ft = time.time()
             samples = read_recording(full_file, sample_rate, sample_dtype, sample_len, t_seg/1e3)
 
-            freqs, psds = get_PSD_from_samples(samples, sample_rate, win_type, n_per_seg)
+            freqs, psds = get_PSD_arr_from_samples(samples, sample_rate, win_type, n_per_seg)
 
             end_ft = time.time()
             print('Feature time:', end_ft-start_ft)
@@ -54,10 +53,11 @@ def run_psd_svm(n_per_seg, t_seg):
             print('average time for Feature Generation: {:.3}ms, Prediction: {:.3}ms'.format(avg_time_feat*1e3, avg_time_pred*1e3))
             
             
-def run_spec_vggfc(n_per_seg, t_seg):
-    model_folder = '../../saved_models/'
-    model_file = 'VGGFC_SPEC_'+str(n_per_seg)+'_'+str(t_seg)
-
+def run_dl_model(model, feat, n_per_seg, t_seg):
+#     model_folder = '../../saved_models/'
+    model_file = model.upper()+'_'+feat.upper()+'_'+str(n_per_seg)+'_'+str(t_seg)
+    print(model_file)
+    
     ## Load Model
     model = torch.load(model_folder+model_file)
 
@@ -76,7 +76,17 @@ def run_spec_vggfc(n_per_seg, t_seg):
             # get feature
             start_ft = time.time()
             return_array = True
-            rgbs = get_specs_from_samples(samples, sample_rate, n_per_seg, return_array)
+            if feat.upper() == 'SPEC':
+                rgbs = get_specs_img_from_samples(samples, sample_rate, n_per_seg, return_array)
+            elif feat.upper() == 'PSD':
+                win_type = 'hamming'
+                freqs, psds = get_PSD_arr_from_samples(samples, sample_rate, win_type, n_per_seg)
+                rgbs = get_psd_img(psds, return_array)
+            else:
+                print('no matching feature')
+                return
+            
+            feat = torch.tensor(rgbs/255).float()
 
             end_ft = time.time()
             print('Feature time:', end_ft-start_ft)
@@ -85,7 +95,7 @@ def run_spec_vggfc(n_per_seg, t_seg):
             batchsize = 16
 
             start_pd = time.time()
-            feat = torch.tensor(rgbs/255).float()
+            
             i = 0
             while i+batchsize<n_samps:
                 pout = model(feat[i:i+batchsize,:,:])
@@ -103,11 +113,12 @@ def run_spec_vggfc(n_per_seg, t_seg):
             
             
 if __name__ == "__main__":
-    ## run from command line: python run_model.py --model spec_vggfc 1024 20
+    ## run from command line: python run_model.py --model vggfc --feat spec 1024 20
 
     parser = argparse.ArgumentParser()
     # Required positional argument
     parser.add_argument('--model', required=True)
+    parser.add_argument('--feat', required=True)
 #     parser.add_argument('model', type=str,
 #                         help='enter which model')
     
@@ -121,7 +132,7 @@ if __name__ == "__main__":
     print(args.model+' model')
     print('nFFT = '+ str(args.nperseg))
     print('time segment = '+ str(args.tseg)+'ms')
-    if args.model == 'svm_psd':
+    if args.model.lower() == 'svm':
         run_psd_svm(args.nperseg, args.tseg)
-    elif args.model == 'spec_vggfc':
-        run_spec_vggfc(args.nperseg, args.tseg)
+    else:
+        run_dl_model(args.model, args.feat, args.nperseg, args.tseg)

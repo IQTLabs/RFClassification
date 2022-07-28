@@ -6,7 +6,8 @@ from scipy import signal
 import numpy as np
 from helper_functions import *
 
-def get_PSD_from_samples(samples, fs, win_type, n_per_seg):
+# return in arrays
+def get_PSD_arr_from_samples(samples, fs, win_type, n_per_seg):
 #     psd_return = []
     for i, s in enumerate(samples):
         fpsd, Pxx_den = signal.welch(s, fs, window=win_type, nperseg=n_per_seg, return_onesided=False)
@@ -21,7 +22,7 @@ def get_PSD_from_samples(samples, fs, win_type, n_per_seg):
 
 # generate spectrogram from samples generator object
 # if return spec in rgb arrays, use return_array= True, otherwise return a figure list
-def get_specs_from_samples(samples, fs, n_per_seg, return_array, dim_px=(224,224), dpi=100, noverlap=120):
+def get_specs_img_from_samples(samples, fs, n_per_seg, return_array, dim_px=(224,224), dpi=100, noverlap=120):
     if return_array:
         rbg_ls = []
     else:
@@ -46,7 +47,27 @@ def get_specs_from_samples(samples, fs, n_per_seg, return_array, dim_px=(224,224
         return rbg_return
     else:
         return fig_ls
-    
+
+# generate psd images from psd arrays
+def get_psd_img(psd_array, return_array, dim_px=(224,224), dpi=100):
+    if return_array:
+        rbg_ls = []
+    else:
+        fig_ls = []
+    for i in range(psd_array.shape[0]):
+        fig = plot_feat(psd_array[i,:], dim_px, dpi, to_show=False, show_axis=False)
+        if return_array:
+            rgba = fig2data(fig)
+            rgb = rgba[:,:,:3]
+            rbg_ls.append(rgb)
+        else:
+            fig_ls.append(fig)
+            
+    if return_array:
+        rbg_return = np.stack(rbg_ls, axis=0)
+        return rbg_return
+    else:
+        return fig_ls
     
 
 # saving options

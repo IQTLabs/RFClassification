@@ -29,3 +29,26 @@ class VGGFC(nn.Module):
         x = self._fc(x)
         
         return x
+
+class ResNetFC(nn.Module):
+    def __init__(self, num_classes):
+        super(ResNetFC,self).__init__()
+        self.num_classes = num_classes
+        self.resnetfull = models.resnet50(pretrained=True)
+        modules=list(self.resnetfull.children())[:-2] # remove the fully connected layer & adaptive averaging
+        self.resnetfeats=nn.Sequential(*modules)
+        
+        for param in self.resnetfeats.parameters():
+            param.requires_grad_(False)
+        
+        self._fc = nn.Linear(100352, num_classes)
+    def forward(self, x):
+        if len(x.shape)==4:
+            x = torch.moveaxis(x,-1, 1)
+        else:
+            x = torch.moveaxis(x, -1, 0)
+        x = self.resnetfeats(x)
+        x = x.reshape(-1,100352)
+        x = self._fc(x)
+        
+        return x
