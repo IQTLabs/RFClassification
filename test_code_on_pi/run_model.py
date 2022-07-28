@@ -80,16 +80,22 @@ def run_spec_vggfc(n_per_seg, t_seg):
 
             end_ft = time.time()
             print('Feature time:', end_ft-start_ft)
+#             print(rgbs.shape)
+            n_samps = rgbs.shape[0]
+            batchsize = 16
 
             start_pd = time.time()
             feat = torch.tensor(rgbs/255).float()
-            pout = model(feat)
+            i = 0
+            while i+batchsize<n_samps:
+                pout = model(feat[i:i+batchsize,:,:])
+                i = i+batchsize
 
             end_pd = time.time()
             print('Prediction time:', end_pd-start_pd)
 
             # print average time per sample
-            n_samps = rgbs.shape[0]
+            
             avg_time_feat = (end_ft-start_ft)/n_samps
             avg_time_pred = (end_pd-start_pd)/n_samps
 
@@ -97,6 +103,8 @@ def run_spec_vggfc(n_per_seg, t_seg):
             
             
 if __name__ == "__main__":
+    ## run from command line: python run_model.py --model spec_vggfc 1024 20
+
     parser = argparse.ArgumentParser()
     # Required positional argument
     parser.add_argument('--model', required=True)
