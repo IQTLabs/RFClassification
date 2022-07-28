@@ -175,4 +175,4 @@ def runkfoldcv(model, dataset, device, k_folds, batch_size, learning_rate, num_e
     print(f'Average F1: {mean_f1s}')
     print(f'Average Runtime: {mean_runtime} s')
     
-    return model
+    return model, mean_acc, mean_f1s, mean_runtime

@@ -17,14 +17,14 @@ from Torch_Models import *
 def run_psd_svm(n_per_seg, t_seg):
 #     n_per_seg = 256
 #     t_seg = 20
-    model_folder = '../saved_models/'
+    model_folder = '../../saved_models/'
     model_file = 'SVM_PSD_'+str(n_per_seg)+'_'+str(t_seg)+'_1'
     win_type = 'hamming'
 
     model = pickle.load(open(model_folder+model_file, 'rb'))
 
     ## Generate features
-    data_folder = 'sample_data/'
+    data_folder = '../../sample_data/'
 
     for fi in os.listdir(data_folder):
         full_file = data_folder+fi
@@ -55,14 +55,14 @@ def run_psd_svm(n_per_seg, t_seg):
             
             
 def run_spec_vggfc(n_per_seg, t_seg):
-    model_folder = '../saved_models/'
+    model_folder = '../../saved_models/'
     model_file = 'VGGFC_SPEC_'+str(n_per_seg)+'_'+str(t_seg)
 
     ## Load Model
     model = torch.load(model_folder+model_file)
 
     ## Generate features
-    data_folder = 'sample_data/'
+    data_folder = '../../sample_data/'
 
     for fi in os.listdir(data_folder):
         full_file = data_folder+fi
