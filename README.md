@@ -35,6 +35,7 @@ The files in this repository can be grouped into the following categories.
     - PSD features + SVM
   - *DL Approaches.ipynb*
     - VGG/Resnet + LR
+    - imports neural network PyTorch models from *Torch_Models.py*
   - *RFUAV-Net.ipynb*
     - 1DConv model from RFUAVNet paper
   - *Kilic Paper Implementation.ipynb
@@ -50,6 +51,10 @@ The files in this repository can be grouped into the following categories.
   - *nn_functions.py*
     - run k-fold CV for PyTorch-based models
  
+ - **test_code_on_pi/** directory
+  - **run_model.py**: single script to run trained models on sample data files
+    - require:  trained models  and sample data in .zst format with specified directories
+  - **Test on Pi** notebook for development
  - **tests/** directory
     - test scripts for development
     
@@ -77,13 +82,15 @@ Run the model notebooks, which loads features (& normalize if applicable), prefo
 
 *DL Approaches.ipynb* includes transfer learning models using features from inputting spectrogram and PSD images to trained VGG/ResNet models and then applying logistic regression. These models are from [The Effect of Real-World Interference on CNN Feature Extraction and Machine Learning Classification of Unmanned Aerial Systems](https://www.proquest.com/openview/ff99105f660c7fe97afae45f8a384c04/1?pq-origsite=gscholar&cbl=2032442#:~:text=In%20the%20presence%20of%20interference,mode%20classification%20(21%20classes)) and [Unmanned Aerial Vehicle Operating Mode Classification Using Deep Residual Learning Feature Extraction](https://www.mdpi.com/2226-4310/8/3/79).
 
+  **Trained DL ML can be saved in specified directory **
+
 *RFUAV-Net.ipynb* includes an implementation of a 1D convolution network named RFUAV Net from [RF-UAVNet: High-Performance Convolutional Network for RF-Based Drone Surveillance Systems](https://ieeexplore.ieee.org/document/9768809). Raw DroneRF data is used for this model.
 
 ## Result Highlights
-**** preliminary, to be completed
 
 ### Binary Drone Detection Results
-| Dataset | Sample Length | Model                           | Accuracy | F1 Score | Inference Time |
+* Inference time measured on workstation with 128Gb RAM, Intel Core i9-9820X CPU and 1 Titan RTX
+| Dataset | Sample Length | Model                           | Accuracy | F1 Score | Inference Time* |
 |---------|---------------|---------------------------------|----------|----------|----------------|
 | DroneRF | 50ms          | PSD(NFFT=1024) + SVM            | 1        | 1        | 0.13ms         |
 | DroneRF | 0.025ms       | Raw data + 1D Conv (RF-UAV Net) | 0.996    | 0.994    | 1.48ms         |
@@ -91,9 +98,10 @@ Run the model notebooks, which loads features (& normalize if applicable), prefo
 
 
 ### Multiclass Drone Type Classification Results
-| Dataset | Sample Length | Model                           | Accuracy | F1 Score | Inference Time |
+| Dataset | Sample Length | Model                           | Accuracy | F1 Score | Inference Time*|
 |---------|---------------|---------------------------------|----------|----------|----------------|
 | DroneDetect | 200ms          | PSD(NFFT=512) + SVM | 0.94        | 0.94        | 0.66ms         |
+| DroneDetect | 50ms          | PSD(NFFT=1024) + SVM | 0.89        | 0.90        | 3.7ms         |
 | DroneDetect | 20ms       | SPEC(NFFT=1024)+VGG16+FC | 0.91       | 0.91         |  5.7ms        |                |
 |         |               |                                 |          |          |                |
 
