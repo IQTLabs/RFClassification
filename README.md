@@ -89,8 +89,8 @@ Run the model notebooks, which loads features (& normalize if applicable), prefo
 ## Result Highlights
 
 ### Binary Drone Detection Results
-* Inference time measured on workstation with 128Gb RAM, Intel Core i9-9820X CPU and 1 Titan RTX
-| Dataset | Sample Length | Model                           | Accuracy | F1 Score | Inference Time* |
+**Inference time measured on workstation with 128Gb RAM, Intel Core i9-9820X CPU and 1 Titan RTX
+| Dataset | Sample Length | Model                           | Accuracy | F1 Score | Inference Time** |
 |---------|---------------|---------------------------------|----------|----------|----------------|
 | DroneRF | 50ms          | PSD(NFFT=1024) + SVM            | 1        | 1        | 0.13ms         |
 | DroneRF | 0.025ms       | Raw data + 1D Conv (RF-UAV Net) | 0.996    | 0.994    | 1.48ms         |
@@ -98,7 +98,7 @@ Run the model notebooks, which loads features (& normalize if applicable), prefo
 
 
 ### Multiclass Drone Type Classification Results
-| Dataset | Sample Length | Model                           | Accuracy | F1 Score | Inference Time*|
+| Dataset | Sample Length | Model                           | Accuracy | F1 Score | Inference Time**|
 |---------|---------------|---------------------------------|----------|----------|----------------|
 | DroneDetect | 200ms          | PSD(NFFT=512) + SVM | 0.94        | 0.94        | 0.66ms         |
 | DroneDetect | 50ms          | PSD(NFFT=1024) + SVM | 0.89        | 0.90        | 3.7ms         |
@@ -108,6 +108,9 @@ Run the model notebooks, which loads features (& normalize if applicable), prefo
 ## Comparison of Model Parameters
 For PSD+SVM model with DroneDetect data for drone type classification, we compared the performance of model with different sample lengths and FFT lengths.
 The preliminary results show, the higher the NFFT and longer the time segment, the better the model performance. However, it is important to note that the models with longer time segments also have fewer sample points.
+
+Model Performance for different NFFT and sample lengths
+
 |       | NFFT = 256 | NFFT = 512 | NFFT = 1024 | 
 |-------|------------|------------|-------------|
 | 10 ms | 0.80       | 0.81       | 0.82        |
