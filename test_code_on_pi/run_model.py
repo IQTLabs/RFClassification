@@ -60,6 +60,7 @@ def run_dl_model(model, feat, n_per_seg, t_seg):
     
     ## Load Model
     model = torch.load(model_folder+model_file)
+    model = model.cuda()
 
     ## Generate features
     data_folder = '../../sample_data/'
@@ -87,6 +88,7 @@ def run_dl_model(model, feat, n_per_seg, t_seg):
                 return
             
             feat = torch.tensor(rgbs/255).float()
+            feat =feat.cuda()
 
             end_ft = time.time()
             print('Feature time:', end_ft-start_ft)
