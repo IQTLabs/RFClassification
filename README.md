@@ -89,6 +89,8 @@ Run the model notebooks, which loads features (& normalize if applicable), prefo
 ## Result Highlights
 
 ### Binary Drone Detection Results
+Ongoing documentation of performance of models
+
 **Inference time measured on workstation with 128Gb RAM, Intel Core i9-9820X CPU and 1 Titan RTX
 | Dataset | Sample Length | Model                           | Accuracy | F1 Score | Inference Time** |
 |---------|---------------|---------------------------------|----------|----------|----------------|
