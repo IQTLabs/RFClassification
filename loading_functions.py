@@ -83,25 +83,33 @@ class DroneDetectTorch(Dataset): ## NUMBERICAL DATA
                 
         return Feat,Label
 
+### Previous DataLoader - not memory efficient
 ## Create a dataset class
 ## Creating a custom dataset
-class DroneData(Dataset): ## NUMBERICAL DATA
-    def __init__(self, Xarr, yarr):
-        self.Xarr = Xarr
-        self.le = preprocessing.LabelEncoder()
-        self.le.fit(yarr.flatten())
-        self.yarr = self.le.transform(yarr.flatten())
+# class DroneData(Dataset): ## NUMBERICAL DATA
+#     def __init__(self, Xarr, yarr):
+#         self.Xarr = Xarr
+#         self.le = preprocessing.LabelEncoder()
+#         self.le.fit(yarr.flatten())
+#         self.yarr = self.le.transform(yarr.flatten())
         
-    def __len__(self):
-        return len(self.yarr)
+#     def __len__(self):
+#         return len(self.yarr)
     
-    def __getitem__(self, index):
-        # all data must be in float and tensor format
-        X = torch.tensor((self.Xarr[index]))
-        X = X.type(torch.float)
-#         X = X.unsqueeze(0) # why
-        y = torch.tensor((self.yarr[index]))
-        return (X, y)
+#     def __getitem__(self, index):
+#         # all data must be in float and tensor format
+#         X = torch.tensor((self.Xarr[index]))
+#         X = X.type(torch.float)
+# #         X = X.unsqueeze(0) # why
+#         y = torch.tensor((self.yarr[index]))
+#         return (X, y)
+
+# def load_dronedetect_data(feat_folder, feat_name, seg_len, n_per_seg, feat_format, output_feat, interferences):
+# # A loading function to return a dataset variable '''
+#     Xs_arr, y_arr = load_dronedetect_features(feat_folder, feat_name, seg_len, n_per_seg, feat_format, output_feat, interferences)
+            
+#     dataset = DroneData(Xs_arr, y_arr)
+#     return dataset
     
 # Load data for Drone Detect (original file from authors)
 # input: file_path
@@ -120,14 +128,6 @@ def load_dronedetect_raw(file_path, t_seg):
     # 10 Splits into 200ms chunks
     return newarr, data_norm
     
-
-def load_dronedetect_data(feat_folder, feat_name, seg_len, n_per_seg, feat_format, output_feat, interferences):
-# A loading function to return a dataset variable '''
-    Xs_arr, y_arr = load_dronedetect_features(feat_folder, feat_name, seg_len, n_per_seg, feat_format, output_feat, interferences)
-            
-    dataset = DroneData(Xs_arr, y_arr)
-    return dataset
-
 
 ## Load numerical feature files
 # Inputs:
@@ -255,13 +255,19 @@ def load_dronerf_raw(main_folder, t_seg):
 #             print('len of full file:', len(rf_data_h))
 #             print('len sig:', len_seg)
             n_keep = n_segs*len_seg
-
-            rf_sig = np.split(rf_sig[:n_keep], n_segs, axis =1) # samples of 1e4
+    
+#             print('n keep:', n_keep)
+#             print('n_segs:', n_segs)
+            try:
+                rf_sig = np.split(rf_sig[:,:n_keep], n_segs, axis =1) # samples of 1e4
+            except:
+                print('error on splitting')
+                return rf_sig, n_keep, n_segs, len_seg
             Xs.append(normalize_rf(rf_sig))
 
-            y_rep = np.repeat(int(low_freq_files[i][0]),n_keep)
-            y4_rep = np.repeat(int(low_freq_files[i][:3]),n_keep)
-            y10_rep = np.repeat(int(low_freq_files[i][:5]),n_keep)
+            y_rep = np.repeat(int(low_freq_files[i][0]),n_segs)
+            y4_rep = np.repeat(int(low_freq_files[i][:3]),n_segs)
+            y10_rep = np.repeat(int(low_freq_files[i][:5]),n_segs)
 
             ys.append(y_rep) # 2 class
             y4s.append(y4_rep) # 4 class
