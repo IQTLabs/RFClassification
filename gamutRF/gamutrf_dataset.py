@@ -15,8 +15,8 @@ from gamutrf.utils import parse_filename
 
 
 class GamutRFDataset(torch.utils.data.Dataset): 
-    def __init__(self, label_dirs, sample_secs=0.02, nfft=1024, transform=None):
-        
+    def __init__(self, label_dirs, sample_secs=0.02, nfft=1024, transform=None, feat='spec'):
+        self.feat=feat
         self.sample_secs = sample_secs
         self.nfft = nfft
         labeled_filenames = self.labeled_files(label_dirs)
@@ -54,19 +54,29 @@ class GamutRFDataset(torch.utils.data.Dataset):
         # get spectrogram using scipy.signal.spectrogram()
         
         #win_type='hann'
-        f, t, S = signal.spectrogram(samples, sample_rate, window=signal.hann(self.nfft, sym=False), nperseg=self.nfft, detrend='constant', return_onesided=False) 
-        f = np.fft.fftshift(f)
-        S = np.fft.fftshift(S, axes=0)
-        S = 10 * np.log10(S) # dB scale transform
-        
-        # normalize spectrogram (0 to 1) 
-        S_norm = (S-np.min(S))/(np.max(S) - np.min(S))
-        
-        rgba_img = self.cmap(S_norm)
-        rgb_img = np.delete(rgba_img, 3, 2)
-        
-        #data = np.float32(np.moveaxis(rgb_img, -1, 0))
-        data = self.transform(np.float32(rgb_img))
+        if self.feat == 'spec':
+            f, t, S = signal.spectrogram(samples, sample_rate, window=signal.hann(self.nfft, sym=False), nperseg=self.nfft, detrend='constant', return_onesided=False) 
+            f = np.fft.fftshift(f)
+            S = np.fft.fftshift(S, axes=0)
+            S = 10 * np.log10(S) # dB scale transform
+
+            # normalize spectrogram (0 to 1) 
+            S_norm = (S-np.min(S))/(np.max(S) - np.min(S))
+
+            rgba_img = self.cmap(S_norm)
+            rgb_img = np.delete(rgba_img, 3, 2)
+
+            #data = np.float32(np.moveaxis(rgb_img, -1, 0))
+            data = self.transform(np.float32(rgb_img))
+        elif self.feat == 'iq':
+            # return as 2 x N matrix 
+            samp2 = np.empty((2,len(samples)))
+            samp2[0,:] = samples.real
+            samp2[1,:] = samples.imag
+            # normalize
+            samp2 = (samp2-np.min(samp2))/(np.max(samp2) - np.min(samp2))
+            data = samp2
+            
         label = torch.tensor(self.class_to_idx[label_str])
         return data, label
     
@@ -89,11 +99,13 @@ class GamutRFDataset(torch.utils.data.Dataset):
 
         for label, valid_files in labeled_filenames.items(): 
             for i,full_filename in enumerate(tqdm(valid_files)): 
+#                 print(full_filename)
                 idx_filename = full_filename+f"_{str(sample_secs)}.npy"
                 if os.path.exists(idx_filename): 
                     start = timer()
                     file_idx = np.load(idx_filename).tolist()
-                    print(f"loading {idx_filename}; {i}/{len(valid_files)} time = {timer()-start}")
+#                     print('file idx when exists is:', file_idx)
+#                     print(f"loading {idx_filename}; {i}/{len(valid_files)} time = {timer()-start}")
                 else: 
                     file_idx = []
                     freq_center, sample_rate, sample_dtype, sample_len, sample_type, sample_bits = parse_filename(full_filename)
