@@ -201,8 +201,14 @@ class DroneRFTorch(Dataset):
             
         return np.array(ft_ls), np.array(lb_ls)
     
-#     def get_arrays(self):
-        
+    
+    ### NEED TO WRITE GET_ITEM_SINGLE WITH NORMALIZATION
+    
+    # return all data at location
+    def get_arrays(self):
+        i_all = list(range(len(self)))
+        X_use, y_use = self.__getitem__(i_all)
+        return X_use, y_use
     
     
 # function to load drone rf data raw in array form
