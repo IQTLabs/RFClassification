@@ -127,8 +127,6 @@ def load_dronedetect_raw(file_path, t_seg):
     # 10 Splits into 200ms chunks
     return newarr, data_norm
 
-
-
     
 def aug_int(interferences):
 #     00 for a clean signal, 01 for Bluetooth only, 10 for Wi-Fi only and 11 for Bluetooth and Wi-Fi interference concurrently.
@@ -165,10 +163,26 @@ class DroneRFTorch(Dataset):
         self.output_feat = output_feat
         sub_folder_name = feat_format+'_'+feat_name+'_'+highlow+'_'+str(n_per_seg)+'_'+str(seg_len)+'/'
         self.dir_name = feat_folder+sub_folder_name
-        self.files = os.dir(self.dir_name)
+        print(self.dir_name)
+        self.files = os.listdir(self.dir_name)
         
         # do we need a unique label
-#         unique_labels = sorted(list(set([get_label(fi, self.output_feat) for fi in self.files])))
+#         unique_labels = sorted(list(set([self.get_label(fi, self.output_feat) for fi in self.files])))
+#         self.unique_labels = unique_labels
+        
+        # convert output drone codes to names
+        if self.output_feat == 'drones':
+            self.lbl_to_class = {0:"None", 101:"AR", 100:"Bebop", 110:"Phantom"}
+        elif self.output_feat == 'modes':
+            self.lbl_to_class = {0:"None", 
+                                 10000:"Bebop1", 10001:"Bebop2", 10010:"Bebop3", 10011:"Bebop4",
+                                10100:"AR1", 10101:"AR2", 10110:"AR3", 10111:"AR4",
+                                11000:"Phantom1", 11001:"Phantom2", 11010:"Phantom3", 11011:"Phantom4"}
+        elif self.output_feat =='bi':
+            self.lbl_to_class = {0:"None", 1:"Drone"}
+            
+        self.class_to_idx = {lbl:i for i,lbl in enumerate(self.lbl_to_class)}
+        self.idx_to_class = {i:lbl for i,lbl in enumerate(self.lbl_to_class)}
 
      # get the length of each of the files (multiple samples in each file
         self.fi_lens = np.zeros(len(self.files))
@@ -181,7 +195,11 @@ class DroneRFTorch(Dataset):
                     self.fi_lens[i] = len(DATA)
             self.fi_lens = self.fi_lens.astype(int)
 
-     
+        # print data shape
+        print('dataset size', len(self))
+        print('shape of each item', self.__getitem__(0)[0].shape)
+#         print('test')
+
      def __len__(self):
         if self.feat_format == 'IMG':
             return len(self.files) # one image per file
@@ -201,14 +219,61 @@ class DroneRFTorch(Dataset):
             
         return np.array(ft_ls), np.array(lb_ls)
     
-    
-    ### NEED TO WRITE GET_ITEM_SINGLE WITH NORMALIZATION
-    
+     def __getitemsingle__(self, i):
+        if self.feat_format == 'ARR':
+            # convert i to file number and index within file
+            i_file = np.argwhere(self.fi_lens>i)[0][0]
+            DATA = np.load(self.dir_name+self.files[i_file], allow_pickle=True).item()            
+            i_infile = int(len(DATA['feat'])- (self.fi_lens[i_file]-i))
+            Feat = DATA['feat'][i_infile]
+            # apply norm
+            Feat = Feat/np.max(Feat)
+            Label = DATA[self.output_feat][i_infile]
+            Label = self.lbl_to_class[Label]
+                
+        elif self.feat_format == 'IMG':
+            DATA = cv2.imread(self.dir_name+self.files[i])
+            DATA = cv2.cvtColor(DATA, cv2.COLOR_BGR2RGB)
+            Feat = DATA/255
+            Feat = torch.tensor(Feat).float()
+            Label = self.lbl_to_class[self.get_label(self.files[i], self.output_feat)]
+                
+        return Feat,Label
+        
     # return all data at location
-    def get_arrays(self):
+     def get_arrays(self):
         i_all = list(range(len(self)))
         X_use, y_use = self.__getitem__(i_all)
         return X_use, y_use
+    
+     def get_label(self, fi, label_name):
+            bui = fi.split('_')[0]
+            if label_name == 'bi':
+                return int(bui[0])
+            if label_name == 'drones':
+                return int(bui[:3])
+            if label_name == 'modes':
+                return int(bui[:5])
+            
+            
+#      def get_label_drones(self, filename, label_name):
+#         if self.feat_format == 'IMG':
+#             if label_name == 'drones':
+#                 return filename[:3]
+#             if label_name == 'conds':
+#                 return filename[4:6]
+#             if label_name == 'ints':
+#                 return filename[7:9]
+#         elif self.feat_format == 'ARR':
+#             name_parts = filename.split('_')
+#             if label_name == 'drones':
+#                 return name_parts[2]
+#             if label_name == 'conds':
+#                 return name_parts[3]
+#             if label_name == 'ints':
+#                 return name_parts[0]
+#         return None
+
     
     
 # function to load drone rf data raw in array form
@@ -313,8 +378,6 @@ def load_gamut_features(data_path, feat_name):
 #                 y_arr = y_temp
     
     return Xs_arr
-
-
 
 
     

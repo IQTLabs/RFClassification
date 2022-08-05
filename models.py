@@ -63,7 +63,7 @@ class PsdSVM():
         for i, (train_ix, test_ix) in enumerate(kf.split(X)):
 
             # find the optimal hypber parameters
-            svc = svm.SVC(kernel='rbf')
+            svc = svm.SVC(kernel='rbf', gamma = self.gamma)
             clf = GridSearchCV(svc, params, n_jobs=1)
             clf.fit(X[train_ix], y[train_ix])
 
@@ -72,11 +72,15 @@ class PsdSVM():
 
             # predict on the test data
             t_start = time.time()
-            y_pred = clf.predict(X[test_ix])
+#             y_pred = clf.predict(X[test_ix])
             
-            y_pred, runtimes = atomic_benchmark_estimator(clf, X[test_ix], '<U3', verbose=False) # predict & measure time
+            y_pred, runtimes = atomic_benchmark_estimator(clf, X[test_ix], y.dtype, verbose=False) # predict & measure time
+        
+#             print(y_pred)
 #             
             acc = accuracy_score(y[test_ix], y_pred)
+#             print(y_pred)
+#             print(y[test_ix])
             f1 = f1_score(y[test_ix], y_pred, average='weighted')
             print('Fold '+str(i+1)+': Accuracy: {:.3},\t F1: {:.3}, \t Runtime: {:.3}'.format(acc,f1, np.mean(runtimes)))
             
@@ -107,8 +111,9 @@ class PsdSVM():
         
         
 ##### Visualization of Models #####
-def show_confusion_matrix(dataset, labels, predictions, to_save=False, plot_folder='na', plot_name='na'):
-    disp = ConfusionMatrixDisplay.from_predictions(labels, predictions, display_labels=list(dataset.class_to_idx.keys()), normalize='true')
+def show_confusion_matrix(dataset, labels, predictions, normalize='true', to_save=False, plot_folder='na', plot_name='na'):
+    disp = ConfusionMatrixDisplay.from_predictions(labels, predictions, normalize=normalize)
+#     display_labels=list(dataset.class_to_idx.keys())
     if to_save:
         disp.figure_.savefig(f"{plot_folder}/confusion_matrix_{plot_name}.png")
     

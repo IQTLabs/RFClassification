@@ -1,7 +1,4 @@
-'''
-File with all common PyTorch Models
-only models finalized, most models developing in notebooks 
-'''
+
 import torch
 import torch.nn as nn
 import torchvision.models as models
