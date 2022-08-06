@@ -49,6 +49,7 @@ class GamutRFDataset(torch.utils.data.Dataset):
         start = timer()
         freq_center, sample_rate, sample_dtype, sample_bytes, sample_type, sample_bits = parse_filename(filename)
         start = timer()
+        filename = self.get_full_file(filename)
         samples = self.read_recording(filename, sample_rate, sample_dtype, sample_bytes, self.sample_secs, seek_bytes=byte_offset)
         #print(f"read_recording() time = {timer()-start}")
         # get spectrogram using scipy.signal.spectrogram()
@@ -75,7 +76,7 @@ class GamutRFDataset(torch.utils.data.Dataset):
             samp2[1,:] = samples.imag
             # normalize
             samp2 = (samp2-np.min(samp2))/(np.max(samp2) - np.min(samp2))
-            data = samp2
+            data = torch.tensor(np.float32(samp2))
             
         label = torch.tensor(self.class_to_idx[label_str])
         return data, label
@@ -423,3 +424,9 @@ class GamutRFDataset(torch.utils.data.Dataset):
             x1d = np.frombuffer(sample_buffer, dtype=sample_dtype,
                                 count=buffered_samples)
             return x1d['i'] + np.csingle(1j) * x1d['q']
+        
+        
+    def get_full_file(self, filename):
+        if filename.split('/')[0] == 'data':
+            filename = '/home/ltindall/'+filename
+        return filename
