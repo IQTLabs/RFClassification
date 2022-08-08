@@ -17,7 +17,7 @@ import random
 import time
 
 class ContrastiveEncoder(nn.Module):
-    def __init__(self, to_augment=True):
+    def __init__(self, num_classes, to_augment=True):
         super(ContrastiveEncoder,self).__init__()
         self.conv1 = nn.Conv1d(in_channels=2, out_channels=128, kernel_size=24)
 #         self.lstm1 = nn.LSTM(input_size=419407, num_layers=2, hidden_size=10, dtype=torch.float64, batch_first=True)
@@ -27,7 +27,7 @@ class ContrastiveEncoder(nn.Module):
         self.encode_lin1 = nn.Linear(in_features=3276, out_features=128, bias=False)
         
         self.proj_lin1 = nn.Linear(in_features=128, out_features=128, bias=False)
-        self.proj_lin2 = nn.Linear(in_features=128, out_features=64, bias=False)
+        self.proj_lin2 = nn.Linear(in_features=128, out_features=num_classes, bias=False)
         
         self.thetas = [0, np.pi/2, np.pi, 3*np.pi/2]
         self.n_aug = 2
@@ -40,11 +40,11 @@ class ContrastiveEncoder(nn.Module):
         else:
             samp = x
         ri = self.encode(samp)
-
-#         if not toproj:
-#             return ri
-        zi = self.projectionHead(ri)
+        if self.to_augment:
+            return ri
         
+        zi = self.projectionHead(ri)
+#         print(zi.shape)
         return zi
     
     def encode(self,x):
@@ -70,7 +70,7 @@ class ContrastiveEncoder(nn.Module):
     
 ## USE VGG19 TRANSFER LEARNING FOR encoder on spec images
 class TransferEncoder(nn.Module):
-    def __init__(self, to_augment=True):
+    def __init__(self, num_classes, to_augment=True):
         super(TransferEncoder,self).__init__()
         
         self.vgg16 = torchvision.models.vgg16(pretrained=True)
@@ -81,35 +81,42 @@ class TransferEncoder(nn.Module):
         for p in self.vggmodel.parameters():
             p.requires_grad = False
         
-        self.conv1 = nn.Conv1d(in_channels=2, out_channels=128, kernel_size=24)
+        self.conv1 = nn.Conv1d(in_channels=1, out_channels=1, kernel_size=24)
 #         self.conv2 = nn.Conv1d(in_channels=128, out_channels=128, kernel_size=8)
-        self.mpool = nn.MaxPool2d(kernel_size=128)
-        self.encode_lin1 = nn.Linear(in_features=3276, out_features=128, bias=False)
+        self.mpool = nn.MaxPool1d(kernel_size=128)
+        self.encode_lin1 = nn.Linear(in_features=195, out_features=128, bias=False)
         
         self.proj_lin1 = nn.Linear(in_features=128, out_features=128, bias=False)
-        self.proj_lin2 = nn.Linear(in_features=128, out_features=64, bias=False)
-        
-        self.thetas = [0, np.pi/2, np.pi, 3*np.pi/2]
-        self.n_aug = 2
+        self.proj_lin2 = nn.Linear(in_features=128, out_features=num_classes, bias=False)
         
         self.to_augment = to_augment
+        self.gaussian_noise = AddGaussianNoise(0,1)
+        
         
     def forward(self, x):
+        print('input size:', x.shape)
+            
         if self.to_augment:
-            samp = augmentData(x, self.thetas) ### Add noise to image
+            samp = self.gaussian_noise(x) ### Add noise to image
         else:
             samp = x
         ri = self.encode(samp)
-
-#         if not toproj:
-#             return ri
+        print('ri shape:', ri.shape)
+        if self.to_augment:
+            return ri
         zi = self.projectionHead(ri)
+        print('zi shape:', zi.shape)
         
         return zi
     
     def encode(self,x):
         x = self.vggmodel(x)
+#         print('after vgg shape:', x.shape)
+        x = x.reshape(-1,25088)
+        x = x.unsqueeze(1)
+#         print('after reshape shape:', x.shape)
         x = self.conv1(x)
+#         print('after cov1', x.shape)
         x = self.mpool(x)
         
         x = self.encode_lin1(x)
@@ -147,7 +154,7 @@ def contrastive_loss(v1, v2):
     sims_exp = torch.zeros((len(v1), len(v2)))
     for i in range(len(v1)):
         for j in range(len(v2)):
-            sims_exp[i][j] = torch.exp(sim(v1[:,i],v2[:,j])/tau)
+            sims_exp[i][j] = torch.exp(sim(v1[i],v2[j])/tau)
     
     for i in range(len(v1)):
         for j in range(len(v2)):
@@ -163,3 +170,18 @@ def contrastive_loss(v1, v2):
             
 def sim(a,b):
     return torch.dot(a, b)/(torch.norm(b)*torch.norm(a))
+
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+class AddGaussianNoise(object):
+    def __init__(self, device, mean=0., std=1.):
+        self.std = std
+        self.mean = mean
+        
+    def __call__(self, tensor):
+        rand_t = torch.randn(tensor.size())
+        rand_t = rand_t.to(device)
+        return tensor +  rand_t* self.std + self.mean
+    
+    def __repr__(self):
+        return self.__class__.__name__ + '(mean={0}, std={1})'.format(self.mean, self.std)

@@ -1,5 +1,6 @@
-## SemiAMC model by Liu2022 from notebook
-## Transfer to script form to run overnight
+## second script to run using the VGG features to train a encoder
+
+## need to figure out how to augment the data
 
 import sys; sys.path.insert(0, '..') # add parent folder path where lib folder is
 
@@ -25,7 +26,7 @@ from torch.utils.data import Dataset
 import torchvision.models as models
 
 import random
-import time
+
 
 
 label_dirs= {
@@ -40,11 +41,11 @@ sample_secs = 0.02
 nfft = 1024
 batch_size = 8
 num_workers = 19
-num_epochs =1
-train_val_test_split = [0.75, 0.05, 0.2] #[0.0005, 0.0005, 0.999]  #[0.75, 0.05, 0.20] ##[0.75, 0.05, 0.20]
+num_epochs = 4
+train_val_test_split = [0.75, 0.05, 0.20] #[0.0005, 0.0005, 0.999]  #[0.75, 0.05, 0.20] #[0.0005, 0.0005, 0.999] #[0.75, 0.05, 0.20]
 save_iter = 200
 eval_iter = 10000
-feat = 'iq'
+feat = 'spec'
 
 dataset = GamutRFDataset(label_dirs, sample_secs=sample_secs, nfft=nfft, feat=feat)
 print(dataset.idx_to_class)
@@ -57,7 +58,7 @@ for lb in dataset.unique_labels:
 
 # ### Set propotion of known and unknown data
 labeled_splits = {}
-labeled_splits['drone'] = [0.5, 0.5] # [number_labelled, number_unlabelled]
+labeled_splits['drone'] = [0.2, 0.8] # [number_labelled, number_unlabelled]
 labeled_splits['wifi_2_4'] = [1, 0]
 labeled_splits['wifi_5'] = [1, 0]
 
@@ -91,11 +92,22 @@ known_dataloader = torch.utils.data.DataLoader(known_data, batch_size=batch_size
 validation_dataloader = torch.utils.data.DataLoader(validation_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
 test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
 
+
+# start model
 ##### TRAIN ENCODER #####
-num_classes = 3
-model = ContrastiveEncoder(num_classes, to_augment=True)
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+num_classes = 3
+model = TransferEncoder(num_classes, to_augment=True)
 model = model.to(device)
+
+samp = train_dataset.__getitem__(0)[0]
+samp = torch.unsqueeze(samp, dim=0)
+
+samp = samp.to(device)
+print(samp.shape)
+out = model.forward(samp)
+
+print(out.shape)
 
 for name, p in model.named_parameters():
     if "proj" in name: # freeze the project layers
@@ -103,7 +115,8 @@ for name, p in model.named_parameters():
         p.requires_grad = False
     else:
         p.requires_grad = True
-
+        
+        
 # Train the encoder
 print('------- TRAINING ENCODER -------')
 optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
@@ -143,7 +156,9 @@ for epoch in range(num_epochs):
         loss.backward()
         optimizer.step()
         #print(f"backward and step = {timer()-start} seconds")
-
+        
+        
+        
 #### Train classifier ####
 print('------- TRAINING CLASSIFIER -------')
 # freeze the encoder layer (flip the layers requiring grad)
