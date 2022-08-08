@@ -388,12 +388,7 @@
    "id": "c4be6ec2",
    "metadata": {},
    "source": [
-<<<<<<< HEAD
-    "### Run Classifier"
-=======
-    "### Run Classifier (LR or kNN)"
->>>>>>> b03c964... semisup methods update
-   ]
+    "### Run Classifier"]
   },
   {
    "cell_type": "code",
@@ -430,60 +425,7 @@
   },
   {
    "cell_type": "code",
-<<<<<<< HEAD
-   "execution_count": 13,
-   "id": "d1a6d473",
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "### The dimension of data is not reasonable (more features than examples)\n",
-    "# Reduce dimension with PCA\n",
-    "\n",
-    "# pca = PCA()\n",
-    "# # Define a Standard Scaler to normalize inputs\n",
-    "# scaler = StandardScaler()\n",
-    "\n",
-    "# # set the tolerance to a large value to make the example faster\n",
-    "# logistic = LogisticRegression(max_iter=10000)\n",
-    "# pipe = Pipeline(steps=[(\"scaler\", scaler), (\"pca\", pca), (\"logistic\", logistic)])\n",
-    "# print(pipe)\n",
-    "# # different parameters\n",
-    "# param_grid = {\n",
-    "#     \"pca__n_components\": [800],\n",
-    "#     \"logistic__C\": [1, 10],\n",
-    "# }\n",
-    "\n",
-    "# best_params_ls = []\n",
-    "# acc_ls = []\n",
-    "# f1_ls = []\n",
-    "# runt_ls = []\n",
-    "\n",
-    "# for train_ix, test_ix in tqdm(cv.split(Xs_feat)):\n",
-    "#     clf = GridSearchCV(pipe, param_grid, n_jobs=1)\n",
-    "    \n",
-    "#     clf.fit(Xs_feat[train_ix], y_cat[train_ix])\n",
-    "    \n",
-    "#     print(clf.best_params_)\n",
-    "# #     best_params_ls.append(clf.best_params_)\n",
-    "    \n",
-    "#     # predict on the test data\n",
-    "#     y_pred, runtimes = atomic_benchmark_estimator(clf, Xs_feat[test_ix], output_type= '<U3', \n",
-    "#                                                   verbose=False)\n",
-    "#     runt_ls.append(np.mean(runtimes))\n",
-    "    \n",
-    "#     acc = accuracy_score(y_cat[test_ix], y_pred)\n",
-    "#     f1 = f1_score(y_cat[test_ix], y_pred, average='weighted')\n",
-    "#     print('Accuracy: {:.3},\\t F1: {:.3}'.format(acc,f1))\n",
-    "#     acc_ls.append(acc)\n",
-    "#     f1_ls.append(f1)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 15,
-=======
    "execution_count": null,
->>>>>>> b03c964... semisup methods update
    "id": "7aab9544",
    "metadata": {},
    "outputs": [
