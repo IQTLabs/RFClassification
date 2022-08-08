@@ -183,6 +183,7 @@ class DroneRFTorch(Dataset):
             
         self.class_to_idx = {lbl:i for i,lbl in enumerate(self.lbl_to_class)}
         self.idx_to_class = {i:lbl for i,lbl in enumerate(self.lbl_to_class)}
+        self.unique_labels = list(self.lbl_to_class.values())
 
      # get the length of each of the files (multiple samples in each file
         self.fi_lens = np.zeros(len(self.files))
@@ -236,7 +237,8 @@ class DroneRFTorch(Dataset):
             DATA = cv2.cvtColor(DATA, cv2.COLOR_BGR2RGB)
             Feat = DATA/255
             Feat = torch.tensor(Feat).float()
-            Label = self.lbl_to_class[self.get_label(self.files[i], self.output_feat)]
+            Label = self.class_to_idx[self.get_label(self.files[i], self.output_feat)]
+            
                 
         return Feat,Label
         
@@ -356,6 +358,7 @@ def load_dronerf_features(feat_folder, feat_name, seg_len, n_per_seg, highlow, o
     
     return Xs_arr, y_arr
 
+
 ### 3. GamutRF scanner collected Data ###
 
 # load the generated features from gamut collection day
@@ -378,6 +381,12 @@ def load_gamut_features(data_path, feat_name):
 #                 y_arr = y_temp
     
     return Xs_arr
+
+
+#### 4. Dataloaders for RAW dataset data (IQ and magnitude)
+# class RFRawTorch(Dataset):
+#     def ___len___
+#     def ___getitem___
 
 
     

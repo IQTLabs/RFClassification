@@ -5,6 +5,9 @@ import torch.nn as nn
 from sklearn.model_selection import KFold
 import time
 from sklearn.metrics import f1_score
+# from models import show_confusion_matrix
+from sklearn.metrics import ConfusionMatrixDisplay
+import matplotlib.pyplot as plt
 
 def runkfoldcv(model, dataset, device, k_folds, batch_size, learning_rate, num_epochs, momentum, l2reg):
     num_classes = model.num_classes
@@ -160,7 +163,12 @@ def runkfoldcv(model, dataset, device, k_folds, batch_size, learning_rate, num_e
         print('F1 for fold %d: %.2f ' % (fold, mean_f1))
         print('Runtime for fold %d: %.4f s' % (fold, mean_runtime))
         print('--------------------------------')
-
+        
+        # display confusion matrix
+        disp = ConfusionMatrixDisplay.from_predictions(targets.cpu(), ys.cpu(), normalize='true')
+#         disp.plot()
+        plt.show()
+        
     # Print fold results
     print(f'K-FOLD CROSS VALIDATION RESULTS FOR {k_folds} FOLDS')
     print('--------------------------------')
@@ -173,6 +181,6 @@ def runkfoldcv(model, dataset, device, k_folds, batch_size, learning_rate, num_e
     mean_runtime = np.mean(runtimes)
     print(f'Average Accuracy: {mean_acc} %')
     print(f'Average F1: {mean_f1s}')
-    print(f'Average Runtime: {mean_runtime} s')
+    print(f'Average Runtime: {mean_runtime*1e3} ms')
     
     return model, mean_acc, mean_f1s, mean_runtime
