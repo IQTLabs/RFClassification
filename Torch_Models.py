@@ -2,6 +2,16 @@
 import torch
 import torch.nn as nn
 import torchvision.models as models
+from torch.nn import Module
+from torch.nn import Conv2d
+from torch.nn import Linear
+from torch.nn import MaxPool2d
+from torch.nn import ReLU
+from torch.nn import LogSoftmax
+from torch import flatten
+import torch.nn.functional as F
+from torch.utils.data import Dataset
+
 
 ### VGG features with Fully Connected Layer
 class VGGFC(nn.Module):
@@ -57,13 +67,13 @@ class RFUAVNet(nn.Module):
         super(RFUAVNet, self).__init__()
         self.num_classes = num_classes
 
-        self.dense = nn.Linear(320, num_classes)
+        self.dense = nn.Linear(320, num_classes) #320 inputs in original paper with 0.25ms input
         self.pool = nn.MaxPool1d(kernel_size=2, stride=2)
         self.smax = nn.Softmax(dim=1)
         
         # for r unit
-        self.conv1 = nn.Conv1d(in_channels=2, out_channels=64, kernel_size=5, stride=5)
-        self.norm1 = nn.BatchNorm1d(num_features=64)
+        self.conv1 = nn.Conv1d(in_channels=2, out_channels=64, kernel_size=5, stride=5, dtype=torch.float32)
+        self.norm1 = nn.BatchNorm1d(num_features=64, dtype=torch.float32)
         self.elu1 = nn.ELU(alpha=1.0, inplace=False)
         
         # setup for components of the gunit
@@ -134,6 +144,8 @@ class RFUAVNet(nn.Module):
         return out
     
     def runit(self, x):
+        print('r unit input typpe', x.dtype)
+        print(x)
         x = self.conv1(x)
         x = self.norm1(x)
         x = self.elu1(x)

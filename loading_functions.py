@@ -8,6 +8,8 @@ from sklearn.metrics import f1_score
 import torch
 import pandas as pd
 import cv2
+import time
+from scipy import interpolate
 
 ### 1. DRONEDETECT Dataset ###
 
@@ -384,11 +386,155 @@ def load_gamut_features(data_path, feat_name):
 
 
 #### 4. Dataloaders for RAW dataset data (IQ and magnitude)
-# class RFRawTorch(Dataset):
-#     def ___len___
-#     def ___getitem___
+class RFRawTorch(Dataset):
+    def __init__(self, main_folder, t_seg, output_feat, whichdata, downsamp, interferences=None):
+        self.t_seg = t_seg
+        self.output_feat = output_feat
+        self.interference = interferences
+        self.whichdata = whichdata
+        self.downsamp = downsamp
+        self.files = []
+        
+        if whichdata =='dronerf':
+            # if load into memory
+#             self.X, ys, y4, y10 = load_dronerf_raw(main_folder, t_seg)
+#             if output_feat == 'bi':
+#                 self.y = ys
+#             elif output_feat == 'drones':
+#                 self.y = y4
+#             elif output_feat == 'modes':
+#                 self.y = y10
+            self.files_h = os.listdir(main_folder+'High/')
+            self.files_l = os.listdir(main_folder+'Low/')
+            
+#             for i in range(len(high_freq_files)):
+#         # load RF data
+#         rf_data_h = pd.read_csv(main_folder+'High/'+high_freq_files[i], header=None).values
+#         rf_data_h = rf_data_h.flatten()
 
+#         rf_data_l = pd.read_csv(main_folder+'Low/'+low_freq_files[i], header=None).values
+#         rf_data_l = rf_data_l.flatten()
 
+#         if len(rf_data_h)!=len(rf_data_l):
+#             print('diff', i, 'file name:', low_freq_files[i]) 
+#             # not sure why one pair of files have different lengths (skip this file for now)
+#         else:
+#             # stack the features and ys
+#             rf_sig = np.vstack((rf_data_h, rf_data_l))
+
+#             # decide on segment lengths
+#             len_seg = int(t_seg/1e3*fs)
+#             n_segs = (len(rf_data_h))//len_seg
+#             n_keep = n_segs*len_seg
+#             try:
+#                 rf_sig = np.split(rf_sig[:,:n_keep], n_segs, axis =1) # samples of 1e4
+                
+            self.unique_labels = set(self.y)
+        elif whichdata == 'dronedetect':
+            self.files = []
+            for sf in tqdm(interferences, desc='get files'):
+                drone_folders = os.listdir(main_folder+sf+'/')
+                for df in drone_folders:
+                    sd_dronefolder = main_folder+sf+'/'+df+'/'
+                    ful_file_names = [sd_dronefolder+fi for fi in os.listdir(sd_dronefolder)]
+                    self.files.extend(ful_file_names)
+#                     print(self.files)
+            
+            self.fi_lens = np.zeros(len(self.files))
+            self.fi_ys = []
+            # get the number of splits for one file
+            DATA, _ = load_dronedetect_raw(self.files[0], t_seg)
+            n_splits = len(DATA)
+            for i in tqdm(range(len(self.files)), desc='get file lengths'):
+                f = self.files[i]
+                # load for each one taking a while
+#                 start = time.time()
+#                 DATA, _ = load_dronedetect_raw(f, t_seg)
+#                 print('time for loading:', time.time()-start)
+                if i ==0:
+                    self.fi_lens[i] = n_splits
+                else:
+                    self.fi_lens[i] = self.fi_lens[i-1]+n_splits
+                    
+                # get label
+                label_name = self.get_label(f, self.output_feat)
+                self.fi_ys.append(label_name)
+                
+            self.fi_lens = self.fi_lens.astype(int)
+            self.unique_labels = set(self.fi_ys)
+            
+            self.class_to_idx = {lbl:i for i,lbl in enumerate(self.unique_labels)}
+            self.idx_to_class = {i:lbl for i,lbl in enumerate(self.unique_labels)}
+            
+    def __len__(self):
+        if self.whichdata == 'dronerf':
+            return len(self.y)
+        elif self.whichdata == 'dronedetect':
+            return self.fi_lens[-1]
+    
+    def __getitem__(self, i):
+        if self.whichdata == 'dronerf':
+            return torch.tensor(self.X[i]).float(), torch.tensor(self.y[i]).float()
+        elif self.whichdata == 'dronedetect':
+            i_file = np.argwhere(self.fi_lens>i)[0][0]
+            d_splits, _ = load_dronedetect_raw(self.files[i_file], self.t_seg)
+            i_infile = int(len(d_splits)- (self.fi_lens[i_file]-i))
+            Xreal = torch.tensor(d_splits[i_infile].real).float()
+            Ximag = torch.tensor(d_splits[i_infile].imag).float()
+            if self.downsamp:
+                Xreal = self.down_interp(Xreal)
+                Ximag = self.down_interp(Ximag)
+                
+            X = torch.stack((Xreal,Ximag), dim=0)
+            y = self.class_to_idx[self.fi_ys[i_file]]
+            return X, y
+    
+    def get_label(self, f, output_feat):
+#         print('split name final', split_name_final)
+        if output_feat == 'drones':
+            split_name_final = f.split('/')[-1]
+            return split_name_final.split('_')[0]
+        elif output_feat == 'modes':
+            split_name_final = f.split('/')[-2]
+            return split_name_final.split('_')[-1]
+        elif output_feat == 'int':
+            return f.split('/')[-3]
+        
+    def down_interp(self, x):
+        t = np.arange(0, len(x))
+        f = interpolate.interp1d(t,x)
+        tt = np.linspace(0, len(x)-1, num=self.downsamp)
+        return torch.tensor(f(tt)).float()
+          
+        
+        
+        
+## Create a dataset class
+## Creating a custom dataset
+class DroneData(Dataset): ## NUMBERICAL DATA
+    def __init__(self, Xarr, yarr):
+        self.Xarr = Xarr
+        self.le = preprocessing.LabelEncoder()
+        self.le.fit(yarr.flatten())
+        self.yarr = self.le.transform(yarr.flatten())
+        
+    def __len__(self):
+        return len(self.yarr)
+    
+    def __getitem__(self, index):
+        # all data must be in float and tensor format
+        X = torch.tensor((self.Xarr[index]))
+        X = X.unsqueeze(0)
+        y = torch.tensor(float(self.yarr[index]))
+        return (X, y)
+
+## Loop through all files in a folder
+# def loop_files(main_folder):
+#     for sf in inteference_folders: # options: ['WIFI', 'BLUE', 'BOTH', 'CLEAN']
+#         print('CURRENT FOLDER: ', sf)
+
+#         drone_folders = os.listdir(main_folder+sf+'/')
+#         for df in drone_folders:
     
 ####~ARCHIVE FUNCTIONS###
 ## Load numerical feature files

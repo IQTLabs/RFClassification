@@ -32,20 +32,24 @@ class PsdSVM():
             svc = svm.SVC(kernel='rbf', C=self.C, gamma = self.gamma)
             svc.fit(X[train_ix], y[train_ix])
             
-            t_start = time.time()
-            y_pred = svc.predict(X[test_ix])
-            t_dur = time.time()-t_start
-            t_batch_avg = t_dur/len(y_pred)
+#             t_start = time.time()
+#             y_pred = svc.predict(X[test_ix])
+#             t_dur = time.time()-t_start
+#             t_batch_avg = t_dur/len(y_pred)
+            
+                        # predict on the test data (by each sample)
+            y_pred, t_indiv = atomic_benchmark_estimator(svc, X[test_ix], output_type=y.dtype, verbose=False)
+            t_indiv_avg = np.mean(t_indiv)
+            t_inf = t_indiv_avg # inference time
             
             acc = accuracy_score(y[test_ix], y_pred)
             f1 = f1_score(y[test_ix], y_pred, average='weighted')
             
-            print('Fold '+str(i+1)+': Accuracy: {:.3},\t F1: {:.3}, \t Runtime: {:.3}'.format(acc,f1, t_batch_avg))
+            print('Fold '+str(i+1)+': Accuracy: {:.3},\t F1: {:.3}, \t Runtime: {:.3}'.format(acc,f1, t_inf))
             
-#             # predict on the test data (by each sample)
-#             y_pred, runtimes = atomic_benchmark_estimator(svc, X_use[test_ix], output_type='<U3', verbose=False)
+
             # Add to Lists
-            self.cv_runt_ls.append(t_batch_avg)
+            self.cv_runt_ls.append(t_inf)
             self.cv_acc_ls.append(acc)
             self.cv_f1_ls.append(f1)
 

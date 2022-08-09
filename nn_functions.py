@@ -67,6 +67,7 @@ def runkfoldcv(model, dataset, device, k_folds, batch_size, learning_rate, num_e
             for i, data in enumerate(trainloader):
                 # Get inputs
                 inputs, targets = data
+                print(targets)
 #                 inputs = inputs.float()
                 targets= targets.type(torch.long)
 
@@ -159,9 +160,9 @@ def runkfoldcv(model, dataset, device, k_folds, batch_size, learning_rate, num_e
         results[fold] = 100.0 * (correct / total)
         runtimes[fold] = mean_runtime
         f1s[fold] = mean_f1
-        print('Accuracy for fold %d: %.2f %%' % (fold, 100.0 * correct / total))
-        print('F1 for fold %d: %.2f ' % (fold, mean_f1))
-        print('Runtime for fold %d: %.4f s' % (fold, mean_runtime))
+        print('Accuracy for fold %d: %.3f %%' % (fold, 100.0 * correct / total))
+        print('F1 for fold %d: %.3f ' % (fold, mean_f1))
+        print('Runtime for fold %d: %.3f s' % (fold, mean_runtime))
         print('--------------------------------')
         
         # display confusion matrix
