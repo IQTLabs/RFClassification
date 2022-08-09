@@ -33,12 +33,28 @@ num_epochs = 4
 train_val_test_split = [0.75, 0.05, 0.20]
 save_iter = 200
 eval_iter = 10000
+leesburg_split = True
+experiment_name = 'leesburg_split'
 
 dataset = GamutRFDataset(label_dirs, sample_secs=sample_secs, nfft=nfft)
 print(dataset.idx_to_class)
 #dataset.debug(590)
 
 train_dataset, validation_dataset, test_dataset = torch.utils.data.random_split(dataset, (int(np.ceil(train_val_test_split[0]*len(dataset))), int(np.ceil(train_val_test_split[1]*len(dataset))), int(train_val_test_split[2]*len(dataset))))
+
+if leesburg_split: 
+    train_val_test_split = [0.77, 0.03, 0.20]
+    all_except_leesburg = [i for (i, idx) in enumerate(dataset.idx) if not('leesburg' in idx[1] and 'field' in idx[1])] 
+    dataset_sub = torch.utils.data.Subset(dataset, all_except_leesburg)
+    train_dataset, validation_dataset, test_dataset = torch.utils.data.random_split(dataset_sub, (int(np.ceil(train_val_test_split[0]*len(dataset_sub))), int(np.ceil(train_val_test_split[1]*len(dataset_sub))), int(train_val_test_split[2]*len(dataset_sub))))
+    just_leesburg = [i for (i, idx) in enumerate(dataset.idx) if 'leesburg' in idx[1]]
+    leesburg_subset = torch.utils.data.Subset(dataset, just_leesburg)
+    validation_dataset = torch.utils.data.ConcatDataset((validation_dataset,leesburg_subset))
+    
+print(f"{len(train_dataset)=}")
+print(f"{len(validation_dataset)=}")
+print(f"{len(test_dataset)=}")
+print(f"total len = {len(train_dataset)+len(validation_dataset)+len(test_dataset)}")
 
 train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
 validation_dataloader = torch.utils.data.DataLoader(validation_dataset, batch_size=1, num_workers=num_workers)
@@ -103,7 +119,7 @@ for epoch in range(num_epochs):
         start = timer() 
         
         if (i+1)%save_iter == 0: 
-            model_path = f"resnet18_{str(0.02)}_{epoch}_current.pt"
+            model_path = f"resnet18_{experiment_name}_{str(0.02)}_{epoch}_current.pt"
             torch.save(model.state_dict(), model_path)
         if (i+1)%eval_iter == 0: 
             model.eval()
@@ -122,13 +138,13 @@ for epoch in range(num_epochs):
                     labels.append(label.item())
                     correct = preds == label.data
             disp = ConfusionMatrixDisplay.from_predictions(labels, predictions, display_labels=list(dataset.class_to_idx.keys()), normalize='true')
-            disp.figure_.savefig(f"confusion_matrix_{epoch}_{i}.png")
+            disp.figure_.savefig(f"confusion_matrix_{experiment_name}_{epoch}_{i}.png")
             model.train()
     epoch_loss = running_loss / (len(train_dataloader)*batch_size)
     epoch_acc = running_corrects.double() / (len(train_dataloader)*batch_size)
 
     print(f'Loss: {epoch_loss:.4f} Acc: {epoch_acc:.4f}')
-    model_path = f"resnet18_{str(0.02)}_{epoch}.pt"
+    model_path = f"resnet18_{experiment_name}_{str(0.02)}_{epoch}.pt"
     torch.save(model.state_dict(), model_path)
 
 # Visualize predictions 

@@ -45,6 +45,7 @@ class GamutRFDataset(torch.utils.data.Dataset):
         filename = self.idx[i,1]
         byte_offset = self.idx[i,2]
         
+        
         # parse filename and get samples 
         start = timer()
         freq_center, sample_rate, sample_dtype, sample_bytes, sample_type, sample_bits = parse_filename(filename)
@@ -68,7 +69,7 @@ class GamutRFDataset(torch.utils.data.Dataset):
         #data = np.float32(np.moveaxis(rgb_img, -1, 0))
         data = self.transform(np.float32(rgb_img))
         label = torch.tensor(self.class_to_idx[label_str])
-        return data, label
+        return data, label, S
     
     def labeled_files(self, label_dirs): 
         labeled_filenames = {}
@@ -93,7 +94,7 @@ class GamutRFDataset(torch.utils.data.Dataset):
                 if os.path.exists(idx_filename): 
                     start = timer()
                     file_idx = np.load(idx_filename).tolist()
-                    print(f"loading {idx_filename}; {i}/{len(valid_files)} time = {timer()-start}")
+                    #print(f"loading {idx_filename}; {i}/{len(valid_files)} time = {timer()-start}")
                 else: 
                     file_idx = []
                     freq_center, sample_rate, sample_dtype, sample_len, sample_type, sample_bits = parse_filename(full_filename)
@@ -107,7 +108,7 @@ class GamutRFDataset(torch.utils.data.Dataset):
                             break
                         file_idx.append([label, full_filename, start_byte])
                     np.save(idx_filename, file_idx)
-                    print(f"saving {idx_filename}; {i}/{len(valid_files)} time = {timer()-start}")
+                    #print(f"saving {idx_filename}; {i}/{len(valid_files)} time = {timer()-start}")
                 idx.extend(file_idx)
         return np.array(idx)
     
