@@ -47,6 +47,7 @@ class PsdSVM():
             
             print('Fold '+str(i+1)+': Accuracy: {:.3},\t F1: {:.3}, \t Runtime: {:.3}'.format(acc,f1, t_inf))
             
+            show_confusion_matrix(y[test_ix], y_pred)
 
             # Add to Lists
             self.cv_runt_ls.append(t_inf)
@@ -115,7 +116,7 @@ class PsdSVM():
         
         
 ##### Visualization of Models #####
-def show_confusion_matrix(dataset, labels, predictions, normalize='true', to_save=False, plot_folder='na', plot_name='na'):
+def show_confusion_matrix(labels, predictions, normalize='true', to_save=False, plot_folder='na', plot_name='na'):
     disp = ConfusionMatrixDisplay.from_predictions(labels, predictions, normalize=normalize)
 #     display_labels=list(dataset.class_to_idx.keys())
     if to_save:

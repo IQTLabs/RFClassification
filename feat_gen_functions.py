@@ -55,9 +55,7 @@ def save_array_detect(folder_path, feat, DRONES, CONDS, INTS, feat_name, int_nam
     np.save(fp, data_save)
     
     
-### Drone Detect Custom functions
-
-def save_array_rf(folder_path, feat, BI, DRONES, MODES, feat_name, seg_i):
+def save_array_rf(folder_path, feat, BI, DRONES, MODES, feat_name, n_per_seg, seg_i):
     Xs_arr = np.array(feat)
     
     # labels
@@ -69,7 +67,7 @@ def save_array_rf(folder_path, feat, BI, DRONES, MODES, feat_name, seg_i):
 #     return data_save
 
 #     #Save data
-    date_string = date.today()
+#     date_string = date.today()
     fp = folder_path+feat_name+"_"+str(n_per_seg)+"_"+str(seg_i)
     print(fp)
     np.save(fp, data_save)

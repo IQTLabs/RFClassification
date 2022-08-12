@@ -15,9 +15,10 @@ from torch.utils.data import Dataset
 
 ### VGG features with Fully Connected Layer
 class VGGFC(nn.Module):
-    def __init__(self, num_classes):
+    def __init__(self, num_classes, isarray=False):
         super(VGGFC,self).__init__()
         self.num_classes = num_classes
+        self.isarray = isarray
         self.vggfull = models.vgg16(pretrained=True)
         modules=list(self.vggfull.children())[:-1] # remove the fully connected layer & adaptive averaging
         self.vggfeats=nn.Sequential(*modules)
@@ -27,10 +28,14 @@ class VGGFC(nn.Module):
         
         self._fc = nn.Linear(25088, num_classes)
     def forward(self, x):
-        if len(x.shape)==4:
-            x = torch.moveaxis(x,-1, 1)
+        if self.isarray:
+            x = torch.unsqueeze(x, 1)
+            x = x.repeat(1,3,1,1)
         else:
-            x = torch.moveaxis(x, -1, 0)
+            if len(x.shape)==4:
+                x = torch.moveaxis(x,-1, 1) # move from (225,225,3) to (3,225,225) 
+            else:
+                x = torch.moveaxis(x, -1, 0)
         x = self.vggfeats(x)
         x = x.reshape(-1,25088)
         x = self._fc(x)

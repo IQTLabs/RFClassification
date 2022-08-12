@@ -33,7 +33,7 @@ def get_n_params(model):
     return pp
 
 
-## method to normalize in rfuav-net
+## method to normalize in rfuav-net - they normalized across all drones
 def normalize_rf(rf):
     """apply normalization to data in the numpy array format"""
     rfnorm = []

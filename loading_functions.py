@@ -333,7 +333,7 @@ def load_dronerf_raw(main_folder, t_seg):
             except:
                 print('error on splitting')
                 return rf_sig, n_keep, n_segs, len_seg
-            Xs.append(rf_sig)
+            Xs.append(normalize_rf(rf_sig))
 
             y_rep = np.repeat(int(low_freq_files[i][0]),n_segs)
             y4_rep = np.repeat(int(low_freq_files[i][:3]),n_segs)
