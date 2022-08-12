@@ -9,6 +9,17 @@ from sklearn.metrics import f1_score
 from sklearn.metrics import ConfusionMatrixDisplay
 import matplotlib.pyplot as plt
 
+
+# def reset_weights(m, linear_or_all='lin'):
+#   '''
+#     Try resetting model weights to avoid
+#     weight leakage.
+#   '''
+#   for layer in m.children():
+#         if linear_or_all=='all' or (linear_or_all=='lin' and isinstance(layer, nn.Linear)):
+#             print(f'Reset trainable parameters of layer = {layer}')
+#             layer.reset_parameters()
+
 def runkfoldcv(model, dataset, device, k_folds, batch_size, learning_rate, num_epochs, momentum, l2reg):
     num_classes = model.num_classes
     if num_classes == 2:
@@ -47,12 +58,12 @@ def runkfoldcv(model, dataset, device, k_folds, batch_size, learning_rate, num_e
 
         # Init the neural network
         model = model.to(device)
-    #     network.apply(reset_weights)
+        model.reset_weights()
 
         criterion = nn.CrossEntropyLoss()
 
         # Initialize optimizer
-        optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+        optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 #         optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, weight_decay=l2reg, momentum = momentum)  
 
         # Run the training loop for defined number of epochs
@@ -67,24 +78,22 @@ def runkfoldcv(model, dataset, device, k_folds, batch_size, learning_rate, num_e
             for i, data in enumerate(trainloader):
                 # Get inputs
                 inputs, targets = data
-                print(targets)
+                
+                # Zero the gradients
+                optimizer.zero_grad()
+                
 #                 inputs = inputs.float()
-                targets= targets.type(torch.long)
+#                 targets= targets.type(torch.long)
 
                 # Move tensors to configured device
                 inputs = inputs.to(device)
                 targets = targets.to(device)
                 
-                
-
                 # Perform forward pass
                 outputs = model(inputs)
 
                 # Compute loss            
                 loss = criterion(outputs, targets)
-
-                # Zero the gradients
-                optimizer.zero_grad()
 
                 # Perform backward pass
                 loss.backward()
@@ -98,7 +107,7 @@ def runkfoldcv(model, dataset, device, k_folds, batch_size, learning_rate, num_e
                     print('    Loss after mini-batch %5d: %.5f' %
                           (i + 1, current_loss / 50))
                     current_loss = 0.0
-    #         print('Epoch [{}/{}], Loss: {:.4f}'.format(epoch+1, num_epochs, loss.item()))
+            print('Epoch [{}/{}], Loss: {:.4f}'.format(epoch+1, num_epochs, loss.item()))
 
         # Process is complete.
     #     print('Training process has finished. Saving trained model.')
@@ -167,6 +176,7 @@ def runkfoldcv(model, dataset, device, k_folds, batch_size, learning_rate, num_e
         
         # display confusion matrix
         disp = ConfusionMatrixDisplay.from_predictions(targets.cpu(), ys.cpu(), normalize='true')
+#         display_labels=list(dataset.class_to_idx.keys())
 #         disp.plot()
         plt.show()
         

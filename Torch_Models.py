@@ -36,6 +36,10 @@ class VGGFC(nn.Module):
         x = self._fc(x)
         
         return x
+    
+    def reset_weights(self):
+        print(f'Reset trainable parameters of layer = {self._fc}')
+        self._fc.reset_parameters()
 
 class ResNetFC(nn.Module):
     def __init__(self, num_classes):
@@ -59,6 +63,10 @@ class ResNetFC(nn.Module):
         x = self._fc(x)
         
         return x
+    
+    def reset_weights(self):
+        print(f'Reset trainable parameters of layer = {self._fc}')
+        self._fc.reset_parameters()
     
 
 class RFUAVNet(nn.Module):
@@ -144,8 +152,8 @@ class RFUAVNet(nn.Module):
         return out
     
     def runit(self, x):
-        print('r unit input typpe', x.dtype)
-        print(x)
+#         print('r unit input typpe', x.dtype)
+#         print(x)
         x = self.conv1(x)
         x = self.norm1(x)
         x = self.elu1(x)
@@ -160,4 +168,15 @@ class RFUAVNet(nn.Module):
         x = self.norm2[n](x)
         x = self.elu2[n](x)
         return x
+    
+    def reset_weights(self):
+        for layer in self.children():
+            if hasattr(layer, 'reset_parameters'):
+                print(f'Reset trainable parameters of layer = {layer}')
+                layer.reset_parameters()
+            elif isinstance(layer, nn.ModuleList):
+                for item in layer.children():
+                    if hasattr(item, 'reset_parameters'):
+                        print(f'Reset trainable parameters of layer = {item}')
+                        item.reset_parameters()
    
