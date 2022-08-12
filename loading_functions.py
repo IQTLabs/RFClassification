@@ -19,9 +19,8 @@ class DroneDetectTorch(Dataset):
         self.feat_format = feat_format
         self.output_feat = output_feat
         self.output_tensor = output_tensor
-        if feat_format !='RAW':
+        if feat_name !='RAW':
             self.dir_name = feat_folder+feat_format+'_'+feat_name+'_'+str(n_per_seg)+'_'+str(seg_len)+'/'
-            self.output_tensor = True
         else:
             self.dir_name = feat_folder+feat_format+'_'+feat_name+'_'+str(10000)+'_'+str(seg_len)+'/'
         print('Directory Name: ', self.dir_name)
@@ -37,7 +36,7 @@ class DroneDetectTorch(Dataset):
         
         # get the length of each of the files (multiple samples in each file
         self.fi_lens = np.zeros(len(self.files))
-        if self.feat_format == 'ARR' or self.feat_format == 'RAW':
+        if self.feat_format == 'ARR':
             for i, fi in enumerate(self.files):
                 DATA = np.load(self.dir_name+self.files[i], allow_pickle=True).item()['feat']
                 try:
@@ -73,7 +72,7 @@ class DroneDetectTorch(Dataset):
     def __getitemsingle__(self, i):
         # all data must be in float and tensor format
         
-        if self.feat_format == 'ARR' or self.feat_format=='RAW':
+        if self.feat_format == 'ARR':
             # convert i to file number and index within file
             i_file = np.argwhere(self.fi_lens>i)[0][0]
             DATA = np.load(self.dir_name+self.files[i_file], allow_pickle=True).item()            
@@ -110,7 +109,7 @@ class DroneDetectTorch(Dataset):
                 return filename[4:6]
             if label_name == 'ints':
                 return filename[7:9]
-        elif self.feat_format == 'ARR' or self.feat_format =='RAW':
+        elif self.feat_format == 'ARR':
             name_parts = filename.split('_')
             if label_name == 'drones':
                 return name_parts[2]
@@ -168,10 +167,15 @@ def is_interference(file_name, int_list):
 ### 2. DroneRF DATASET ### 
 class DroneRFTorch(Dataset):
 #     feat_folder, feat_name, seg_len, n_per_seg, highlow, output_feat
-     def __init__(self, feat_folder, feat_name, seg_len, n_per_seg, feat_format, output_feat, highlow):
+     def __init__(self, feat_folder, feat_name, seg_len, n_per_seg, feat_format, output_feat, output_tensor, highlow):
         self.feat_format = feat_format
         self.output_feat = output_feat
-        sub_folder_name = feat_format+'_'+feat_name+'_'+highlow+'_'+str(n_per_seg)+'_'+str(seg_len)+'/'
+        self.output_tensor = output_tensor
+
+        if feat_name == 'RAW':
+            sub_folder_name = feat_format+'_'+feat_name+'_'+str(10000)+'_'+str(seg_len)+'/'
+        else:
+            sub_folder_name = feat_format+'_'+feat_name+'_'+highlow+'_'+str(n_per_seg)+'_'+str(seg_len)+'/'
         self.dir_name = feat_folder+sub_folder_name
         print(self.dir_name)
         self.files = os.listdir(self.dir_name)
@@ -182,18 +186,18 @@ class DroneRFTorch(Dataset):
         
         # convert output drone codes to names
         if self.output_feat == 'drones':
-            self.lbl_to_class = {0:"None", 101:"AR", 100:"Bebop", 110:"Phantom"}
+            self.bui_to_class = {0:"None", 101:"AR", 100:"Bebop", 110:"Phantom"}
         elif self.output_feat == 'modes':
-            self.lbl_to_class = {0:"None", 
+            self.bui_to_class = {0:"None", 
                                  10000:"Bebop1", 10001:"Bebop2", 10010:"Bebop3", 10011:"Bebop4",
                                 10100:"AR1", 10101:"AR2", 10110:"AR3", 10111:"AR4",
                                 11000:"Phantom1", 11001:"Phantom2", 11010:"Phantom3", 11011:"Phantom4"}
         elif self.output_feat =='bi':
-            self.lbl_to_class = {0:"None", 1:"Drone"}
+            self.bui_to_class = {0:"None", 1:"Drone"}
             
-        self.class_to_idx = {lbl:i for i,lbl in enumerate(self.lbl_to_class)}
-        self.idx_to_class = {i:lbl for i,lbl in enumerate(self.lbl_to_class)}
-        self.unique_labels = list(self.lbl_to_class.values())
+        self.class_to_idx = {lbl:i for i,lbl in enumerate(self.bui_to_class.values())}
+        self.idx_to_class = {i:lbl for i,lbl in enumerate(self.bui_to_class.values())}
+        self.unique_labels = list(self.bui_to_class.values())
 
      # get the length of each of the files (multiple samples in each file
         self.fi_lens = np.zeros(len(self.files))
@@ -240,15 +244,17 @@ class DroneRFTorch(Dataset):
             # apply norm
             Feat = Feat/np.max(Feat)
             Label = DATA[self.output_feat][i_infile]
-            Label = self.lbl_to_class[Label]
+            Label = self.bui_to_class[Label]
                 
         elif self.feat_format == 'IMG':
             DATA = cv2.imread(self.dir_name+self.files[i])
             DATA = cv2.cvtColor(DATA, cv2.COLOR_BGR2RGB)
             Feat = DATA/255
+            Label = self.bui_to_class[self.get_bui(self.files[i], self.output_feat)]
+        
+        if self.output_tensor:
             Feat = torch.tensor(Feat).float()
-            Label = self.class_to_idx[self.get_label(self.files[i], self.output_feat)]
-            
+            Label = self.class_to_idx[Label]
                 
         return Feat,Label
         
@@ -258,7 +264,7 @@ class DroneRFTorch(Dataset):
         X_use, y_use = self.__getitem__(i_all)
         return X_use, y_use
     
-     def get_label(self, fi, label_name):
+     def get_bui(self, fi, label_name):
             bui = fi.split('_')[0]
             if label_name == 'bi':
                 return int(bui[0])
@@ -327,7 +333,7 @@ def load_dronerf_raw(main_folder, t_seg):
             except:
                 print('error on splitting')
                 return rf_sig, n_keep, n_segs, len_seg
-            Xs.append(normalize_rf(rf_sig))
+            Xs.append(rf_sig)
 
             y_rep = np.repeat(int(low_freq_files[i][0]),n_segs)
             y4_rep = np.repeat(int(low_freq_files[i][:3]),n_segs)
@@ -576,9 +582,9 @@ class DroneData(Dataset): ## NUMBERICAL DATA
     
     def __getitem__(self, index):
         # all data must be in float and tensor format
-        X = torch.tensor((self.Xarr[index]))
-        X = X.unsqueeze(0)
-        y = torch.tensor(float(self.yarr[index]))
+        X = torch.tensor((self.Xarr[index])).float()
+#         X = X.unsqueeze(0)
+        y = torch.tensor((self.yarr[index]))
         return (X, y)
 
 ## Loop through all files in a folder
