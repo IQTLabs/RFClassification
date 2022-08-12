@@ -102,7 +102,7 @@ Ongoing documentation of performance of models
 | Dataset | Sample Length | Model                           | Accuracy | F1 Score | Inference Time** |
 |---------|---------------|---------------------------------|----------|----------|----------------|
 | DroneRF (High Freq) | 20 ms          | PSD(NFFT=1024) + SVM            | 0.983       | 0.983        | 0.286ms         |
-| DroneRF | 0.025ms       | Raw data + 1D Conv (RF-UAV Net) | 0.997    | 0.998    | 0.642ms         |
+| DroneRF (High & Low Freq) | 0.025ms       | Raw data + 1D Conv (RF-UAV Net) | 0.997    | 0.998    | 0.642ms         |
 |         |               |                                 |          |          |                |
 
 
