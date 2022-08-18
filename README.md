@@ -36,11 +36,11 @@ The files in this repository can be grouped into the following categories.
     - PSD features + SVM
   - *DL Approaches.ipynb* and *run_dl.py*
     - Transfer learning models with ResNet50 and VGG16
-    - Models in Torch_Models.py
   - *RFUAV-Net.ipynb* and *run_rfuav.py*
     - 1DConv model from RFUAVNet paper
   - *Kilic Paper Implementation.ipynb
     - Kilic2021 paper implementation (containing both feature generation and model implementation)
+  - **Note model classes are in : models.py
 
 - **Helper funcutions**
   - *helper_functions.py*

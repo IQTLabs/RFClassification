@@ -11,7 +11,7 @@ import os
 import argparse
 
 import matplotlib.pyplot as plt 
-from Torch_Models import *
+from models import *
 
 model_folder = '../../saved_models/'
 
