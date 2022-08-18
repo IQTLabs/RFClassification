@@ -8,12 +8,14 @@ The project currently uses training data from [DroneRF](https://www.sciencedirec
 Additionally, the project aims to test models using data from [GamutRF](https://github.com/IQTLabs/gamutRF) hardware.
 The eventual goal is to detect and classify drones in real-time using GamutRF.
 
-The current repository mainly uses methods derived from published RF classication papers.
+The current repository contains methods derived from published RF classication papers.
 
 ## Setup
 ### Data
 Download [*DroneRF*](https://www.sciencedirect.com/science/article/pii/S2352340919306675?ref=cra_js_challenge&fr=RR-1) and [*DroneDetect*](https://ieee-dataport.org/open-access/dronedetect-dataset-radio-frequency-dataset-unmanned-aerial-system-uas-signals-machine#files) datasets to local directory.
 If available, also locate data collected by GamutRF workers.
+For all dataset, update the path the the datasets in file_path.py
+
 
 ### Libraries
 * *scikit-learn*: machine learning in Python
