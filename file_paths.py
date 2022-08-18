@@ -5,3 +5,5 @@ dronerf_raw_path = '/home/kzhou/Data/DroneRF/'
 
 dronedetect_feat_path =  '/home/kzhou/main/Features/'
 dronerf_feat_path = '/home/kzhou/main/Features_DroneRF/'
+
+gamutrf_data_path = '../../Data/S3/pdx_worker1/"
