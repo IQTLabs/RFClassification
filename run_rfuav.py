@@ -23,14 +23,14 @@ import torch.nn.functional as F
 from torch.utils.data import Dataset
 import torch
 import torchvision.models as models
-from Torch_Models import *
+from models import *
 # from torchmetrics import F1Score
 from nn_functions import runkfoldcv
 
 ## Import data -  Drone RF
 main_folder = '/home/kzhou/Data/DroneRF/'
 t_seg = 0.25 #ms
-Xs_arr, ys_arr, y4s_arr, y10s_arr = load_dronerf_raw(main_folder, t_seg)
+Xs_arr, ys_arr, y4s_arr, _ = load_dronerf_raw(main_folder, t_seg) # this loading function loads data in 2x10000 form
 
 ## Apply normalization
 L_max = np.max(Xs_arr[:,1,:])
@@ -41,8 +41,20 @@ Maxes = np.vstack((H_max, L_max))
 Mins = np.vstack((H_min, L_min))
 
 Xs_norm = np.zeros(Xs_arr.shape)
-for ihl in range(2):
-    Xs_norm[:,ihl,:] = (Xs_arr[:,ihl,:]-Mins[ihl])/(Maxes[ihl]-Mins[ihl])
+# for ihl in range(2):
+#     for i_sampe in range(Xs_norm.shape[0]):
+# APPLYING GLOBAL MIN/MAX
+#         Xs_norm[i_sampe,ihl,:] = (Xs_arr[i_sampe,ihl,:]-Mins[ihl])/(Maxes[ihl]-Mins[ihl])
+
+# TO DO: COMPARE THE MAX AND MINS OF EACH SEGMENT VS OVER ALL
+# reimplementing what the function in loader is doing
+for i in range(Xs_arr.shape[0]): # for each segment
+    for ihl in range(2):
+        r = np.max(Xs_arr[i,ihl,:]) - np.min(Xs_arr[i,ihl,:]) # compute min max per sample
+        m = np.min(Xs_arr[i,ihl,:])
+#         print('min is', m)
+#         print('range is', r)
+        Xs_norm[i,ihl,:] = (Xs_arr[i,ihl,:]-m)/r
 
 dataset = DroneData(Xs_norm, y4s_arr)
 

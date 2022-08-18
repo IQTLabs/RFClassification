@@ -19,6 +19,8 @@ class DroneDetectTorch(Dataset):
         self.feat_format = feat_format
         self.output_feat = output_feat
         self.output_tensor = output_tensor
+        self.feat_name = feat_name
+        
         if feat_name !='RAW':
             self.dir_name = feat_folder+feat_format+'_'+feat_name+'_'+str(n_per_seg)+'_'+str(seg_len)+'/'
         else:
@@ -78,6 +80,9 @@ class DroneDetectTorch(Dataset):
             DATA = np.load(self.dir_name+self.files[i_file], allow_pickle=True).item()            
             i_infile = int(len(DATA['feat'])- (self.fi_lens[i_file]-i))
             Feat = DATA['feat'][i_infile]
+            if self.feat_name == 'SPEC':
+                # conver to dB
+                Feat = -10*np.log10(Feat)
             # apply norm
             Feat = Feat/np.max(Feat)
             Label = DATA[self.output_feat][i_infile]
@@ -85,6 +90,7 @@ class DroneDetectTorch(Dataset):
         elif self.feat_format == 'IMG':
             DATA = cv2.imread(self.dir_name+self.files[i])
             DATA = cv2.cvtColor(DATA, cv2.COLOR_BGR2RGB)
+#             DATA = cv2.cvtColor(DATA, cv2.COLOR_BGR2GRAY ) # change to grayscale
             Feat = DATA/255
             Label =self.get_label(self.files[i], self.output_feat)
         
@@ -167,10 +173,12 @@ def is_interference(file_name, int_list):
 ### 2. DroneRF DATASET ### 
 class DroneRFTorch(Dataset):
 #     feat_folder, feat_name, seg_len, n_per_seg, highlow, output_feat
-     def __init__(self, feat_folder, feat_name, seg_len, n_per_seg, feat_format, output_feat, output_tensor, highlow):
+     def __init__(self, feat_folder, feat_name, seg_len, n_per_seg, feat_format, output_feat, output_tensor, highlow, to_norm=False):
         self.feat_format = feat_format
         self.output_feat = output_feat
         self.output_tensor = output_tensor
+        self.feat_name = feat_name
+        self.to_norm = to_norm
 
         if feat_name == 'RAW':
             sub_folder_name = feat_format+'_'+feat_name+'_'+str(10000)+'_'+str(seg_len)+'/'
@@ -241,8 +249,10 @@ class DroneRFTorch(Dataset):
             DATA = np.load(self.dir_name+self.files[i_file], allow_pickle=True).item()            
             i_infile = int(len(DATA['feat'])- (self.fi_lens[i_file]-i))
             Feat = DATA['feat'][i_infile]
+            
             # apply norm
-            Feat = Feat/np.max(Feat)
+            if self.to_norm:
+                Feat = Feat/np.max(Feat)
             Label = DATA[self.output_feat][i_infile]
             Label = self.bui_to_class[Label]
                 
@@ -333,7 +343,7 @@ def load_dronerf_raw(main_folder, t_seg):
             except:
                 print('error on splitting')
                 return rf_sig, n_keep, n_segs, len_seg
-            Xs.append(normalize_rf(rf_sig))
+            Xs.append(rf_sig)
 
             y_rep = np.repeat(int(low_freq_files[i][0]),n_segs)
             y4_rep = np.repeat(int(low_freq_files[i][:3]),n_segs)
@@ -353,6 +363,20 @@ def load_dronerf_raw(main_folder, t_seg):
     y4s_arr = np.array(y4s).flatten()
     y10s_arr = np.array(y10s).flatten()
     return Xs_arr, ys_arr, y4s_arr, y10s_arr
+
+## method to normalize for rfuav-net - *Note in original paper - they normalized across all drones
+def normalize_rf(rf):
+    """apply normalization to data in the numpy array format"""
+    rfnorm = []
+    for i in range(len(rf)): # for each segment
+        rfnorm_i = np.zeros(rf[i].shape)
+        for j in range(2):
+            r = (np.max(rf[i][j])-np.min(rf[i][j]))
+            m = np.min(rf[i][j])
+            rfnorm_i[j] = (rf[i][j]-m)/r
+        rfnorm.append(rfnorm_i)
+
+    return rfnorm
 
 def load_dronerf_raw_single(file_path, t_seg):
 #     print('loading from:', file_path)

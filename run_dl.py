@@ -35,7 +35,7 @@ from helper_functions import *
 from latency_helpers import *
 from loading_functions import *
 
-from Torch_Models import *
+from models import *
 
 from file_paths import *
 
@@ -48,8 +48,9 @@ n_per_seg = 1024
 
 output_name = 'drones'
 feat_format = 'IMG'# ARR, IMG
-which_dataset = 'dronerf'
+which_dataset = 'dronedetect'
 output_tensor = True
+which_model = 'vgg' # or 'resnet'
 
 # dataset specific parameters
 drrf_highlow = 'L'
@@ -65,9 +66,10 @@ elif which_dataset == 'dronedetect':
                                     output_name, output_tensor, drde_ints)
         
 num_classes = len(dataset.unique_labels)
-which_model = 'vgg' # or 'resnet'
+print('length of dataset:', len(dataset))
+
 if which_model == 'vgg':
-    Model = VGGFC(num_classes)
+    Model = VGGFC(num_classes, isarray=(feat_format=='ARR'))
 elif which_model == 'resnet':
     Model = ResNetFC(num_classes)
 elif which_model == '1dconv':
