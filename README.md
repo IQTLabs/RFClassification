@@ -29,14 +29,15 @@ The files in this repository can be grouped into the following categories.
     - Generate PSD, spectrogram features from DroneRF real data
   - *Generate GamutRF Features.ipynb*
     - Generate PSD, spectrogram from field day data collected by GamutRF
+  - specify the directories of where the downloaded dataset and features in file_path.py
 
 - **Model Notebooks** (preliminary model exploration)
   - *ML Approaches.ipynb*
     - PSD features + SVM
-  - *DL Approaches.ipynb*
-    - VGG/Resnet + LR
-    - imports neural network PyTorch models from *Torch_Models.py*
-  - *RFUAV-Net.ipynb*
+  - *DL Approaches.ipynb* and *run_dl.py*
+    - Transfer learning models with ResNet50 and VGG16
+    - Models in Torch_Models.py
+  - *RFUAV-Net.ipynb* and *run_rfuav.py*
     - 1DConv model from RFUAVNet paper
   - *Kilic Paper Implementation.ipynb
     - Kilic2021 paper implementation (containing both feature generation and model implementation)
@@ -50,6 +51,8 @@ The files in this repository can be grouped into the following categories.
     - load PSD, spectrogram features and raw data from all datasets
   - *nn_functions.py*
     - run k-fold CV for PyTorch-based models
+  - *feat_gen_functions.py*
+    - helpers for feature generation notebooks
  
  - **test_code_on_pi/** directory
   - **run_model.py**: single script to run trained models on sample data files
@@ -57,6 +60,10 @@ The files in this repository can be grouped into the following categories.
   - **Test on Pi** notebook for development
  - **tests/** directory
     - test scripts for development
+ - **Semi-supervised Methods/**
+    - methods exploring unsupervised classification
+ - **gamutrf/**
+    - dataloader and models for gamutrf data
     
 
 ## How to run
@@ -94,17 +101,16 @@ Ongoing documentation of performance of models
 **Inference time measured on workstation with 128Gb RAM, Intel Core i9-9820X CPU and 1 Titan RTX
 | Dataset | Sample Length | Model                           | Accuracy | F1 Score | Inference Time** |
 |---------|---------------|---------------------------------|----------|----------|----------------|
-| DroneRF | 50ms          | PSD(NFFT=1024) + SVM            | 1        | 1        | 0.13ms         |
-| DroneRF | 0.025ms       | Raw data + 1D Conv (RF-UAV Net) | 0.996    | 0.994    | 1.48ms         |
+| DroneRF (High Freq) | 20 ms          | PSD(NFFT=1024) + SVM            | 0.983       | 0.983        | 0.286ms         |
+| DroneRF (High & Low Freq) | 0.025ms       | Raw data + 1D Conv (RF-UAV Net) | 0.997    | 0.998    | 0.642ms         |
 |         |               |                                 |          |          |                |
 
 
 ### Multiclass Drone Type Classification Results
 | Dataset | Sample Length | Model                           | Accuracy | F1 Score | Inference Time**|
 |---------|---------------|---------------------------------|----------|----------|----------------|
-| DroneDetect | 200ms          | PSD(NFFT=512) + SVM | 0.94        | 0.94        | 0.66ms         |
-| DroneDetect | 50ms          | PSD(NFFT=1024) + SVM | 0.89        | 0.90        | 3.7ms         |
-| DroneDetect | 20ms       | SPEC(NFFT=1024)+VGG16+FC | 0.91       | 0.91         |  5.7ms        |                |
+| DroneDetect | 20ms          | PSD(NFFT=1024) + SVM | 0.85        | 0.85        | 11ms         |
+| DroneDetect | 20ms       | SPEC(NFFT=1024)+VGG16+FC | 0.82       | 0.82         |  7.0ms        |                |
 |         |               |                                 |          |          |                |
 
 ## Comparison of Model Parameters
