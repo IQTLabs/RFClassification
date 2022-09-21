@@ -45,6 +45,7 @@ class GamutRFDataset(torch.utils.data.Dataset):
         filename = self.idx[i,1]
         byte_offset = self.idx[i,2]
         
+        
         # parse filename and get samples 
         start = timer()
         freq_center, sample_rate, sample_dtype, sample_bytes, sample_type, sample_bits = parse_filename(filename)
@@ -79,7 +80,7 @@ class GamutRFDataset(torch.utils.data.Dataset):
             data = torch.tensor(np.float32(samp2))
             
         label = torch.tensor(self.class_to_idx[label_str])
-        return data, label
+        return data, label, S
     
     def labeled_files(self, label_dirs): 
         labeled_filenames = {}
@@ -99,14 +100,12 @@ class GamutRFDataset(torch.utils.data.Dataset):
         idx = []
 
         for label, valid_files in labeled_filenames.items(): 
-            for i,full_filename in enumerate(tqdm(valid_files)): 
-#                 print(full_filename)
+            for i,full_filename in enumerate(tqdm(valid_files)):
                 idx_filename = full_filename+f"_{str(sample_secs)}.npy"
                 if os.path.exists(idx_filename): 
                     start = timer()
                     file_idx = np.load(idx_filename).tolist()
-#                     print('file idx when exists is:', file_idx)
-#                     print(f"loading {idx_filename}; {i}/{len(valid_files)} time = {timer()-start}")
+                    print(f"loading {idx_filename}; {i}/{len(valid_files)} time = {timer()-start}")
                 else: 
                     file_idx = []
                     freq_center, sample_rate, sample_dtype, sample_len, sample_type, sample_bits = parse_filename(full_filename)
@@ -120,7 +119,7 @@ class GamutRFDataset(torch.utils.data.Dataset):
                             break
                         file_idx.append([label, full_filename, start_byte])
                     np.save(idx_filename, file_idx)
-                    print(f"saving {idx_filename}; {i}/{len(valid_files)} time = {timer()-start}")
+                    #print(f"saving {idx_filename}; {i}/{len(valid_files)} time = {timer()-start}")
                 idx.extend(file_idx)
         return np.array(idx)
     
