@@ -33,19 +33,6 @@ def get_n_params(model):
     return pp
 
 
-## method to normalize in rfuav-net
-def normalize_rf(rf):
-    """apply normalization to data in the numpy array format"""
-    rfnorm = []
-    for i in range(len(rf)):
-        rfnorm_i = np.zeros(rf[i].shape)
-        for j in range(2):
-            r = (np.max(rf[i][j])-np.min(rf[i][j]))
-            m = np.min(rf[i][j])
-            rfnorm_i[j] = (rf[i][j]-m)/r
-        rfnorm.append(rfnorm_i)
-
-    return rfnorm
 
 ## convert figure object to 3channel array
 from matplotlib.backends.backend_agg import FigureCanvasAgg
