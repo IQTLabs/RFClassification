@@ -76,7 +76,7 @@ class GamutRFDataset(torch.utils.data.Dataset):
             samp2[0,:] = samples.real
             samp2[1,:] = samples.imag
             # normalize
-            samp2 = (samp2-np.min(samp2))/(np.max(samp2) - np.min(samp2))
+            #samp2 = (samp2-np.min(samp2))/(np.max(samp2) - np.min(samp2))
             data = torch.tensor(np.float32(samp2))
             
         label = torch.tensor(self.class_to_idx[label_str])
