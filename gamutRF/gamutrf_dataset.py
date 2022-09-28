@@ -80,7 +80,7 @@ class GamutRFDataset(torch.utils.data.Dataset):
             data = torch.tensor(np.float32(samp2))
             
         label = torch.tensor(self.class_to_idx[label_str])
-        return data, label, S
+        return data, label
     
     def labeled_files(self, label_dirs): 
         labeled_filenames = {}
