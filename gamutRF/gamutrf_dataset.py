@@ -110,14 +110,16 @@ class GamutRFDataset(torch.utils.data.Dataset):
                     file_idx = []
                     freq_center, sample_rate, sample_dtype, sample_len, sample_type, sample_bits = parse_filename(full_filename)
                     start = timer()
-                    infile = zstandard.ZstdDecompressor().stream_reader(open(full_filename, 'rb'))
-                    while True: 
-                        start_byte = infile.tell()
-                        sample_buffer = infile.read(int(sample_rate * sample_secs) * sample_len)
-                        buffered_samples = int(len(sample_buffer) / sample_len)
-                        if buffered_samples != int(sample_rate*sample_secs):
-                            break
-                        file_idx.append([label, full_filename, start_byte])
+                    reader = get_reader(full_filename)
+                    with reader(full_filename) as infile:
+                        #infile = zstandard.ZstdDecompressor().stream_reader(open(full_filename, 'rb'))
+                        while True: 
+                            start_byte = infile.tell()
+                            sample_buffer = infile.read(int(sample_rate * sample_secs) * sample_len)
+                            buffered_samples = int(len(sample_buffer) / sample_len)
+                            if buffered_samples != int(sample_rate*sample_secs):
+                                break
+                            file_idx.append([label, full_filename, start_byte])
                     np.save(idx_filename, file_idx)
                     #print(f"saving {idx_filename}; {i}/{len(valid_files)} time = {timer()-start}")
                 idx.extend(file_idx)
