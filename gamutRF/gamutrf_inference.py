@@ -25,7 +25,10 @@ num_workers = 0
 
 dataset = GamutRFDataset(label_dirs, sample_secs=sample_secs, nfft=nfft)
 print(f"\n\n\nDataset class to idx mapping: {dataset.idx_to_class}\n\n\n")
-train_dataset, validation_dataset, test_dataset = torch.utils.data.random_split(dataset, (int(np.ceil(train_val_test_split[0]*len(dataset))), int(np.ceil(train_val_test_split[1]*len(dataset))), int(train_val_test_split[2]*len(dataset))))
+n_train = int(np.floor(train_val_test_split[0]*len(dataset)))
+n_validation = int(np.floor(train_val_test_split[1]*len(dataset)))
+n_test = len(dataset) - n_train - n_validation
+train_dataset, validation_dataset, test_dataset = torch.utils.data.random_split(dataset, (n_train, n_validation, n_test))
 test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, num_workers=num_workers)
 
 predictions = []
