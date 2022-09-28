@@ -3,7 +3,7 @@ Project aimed to use RF signals to detect and classify devices
 
 ## General Description
 This project is aimed to use RF signals to detect and classify devices. 
-The current repository explores using RF signals from drone communications to and classify the presense and the types of drones.
+The current repository explores using RF signals from drone communications to classify the presence of and type of drones.
 The project currently uses training data from [DroneRF](https://www.sciencedirect.com/science/article/pii/S2352340919306675?ref=cra_js_challenge&fr=RR-1) and [DroneDetect](https://ieee-dataport.org/open-access/dronedetect-dataset-radio-frequency-dataset-unmanned-aerial-system-uas-signals-machine#files) Datasets.
 Additionally, the project aims to test models using data from [GamutRF](https://github.com/IQTLabs/gamutRF) hardware.
 The eventual goal is to detect and classify drones in real-time using GamutRF.
