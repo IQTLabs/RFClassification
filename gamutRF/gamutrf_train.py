@@ -118,9 +118,13 @@ for epoch in range(num_epochs):
         running_corrects += torch.sum(preds == labels.data)
         start = timer() 
         
-        if (i+1)%save_iter == 0: 
-            model_path = f"resnet18_{experiment_name}_{str(0.02)}_{epoch}_current.pt"
-            torch.save(model.state_dict(), model_path)
+        if (i+1)%save_iter == 0:
+            checkpoint_path = f"resnet18_{experiment_name}_{str(0.02)}_{epoch}_current.pt"
+            torch.save({
+                'model_state_dict': model.state_dict(),
+                'dataset_idx_to_class': dataset.idx_to_class,
+            }, checkpoint_path)
+
         if (i+1)%eval_iter == 0: 
             model.eval()
             predictions = []
@@ -144,9 +148,12 @@ for epoch in range(num_epochs):
     epoch_acc = running_corrects.double() / (len(train_dataloader)*batch_size)
 
     print(f'Loss: {epoch_loss:.4f} Acc: {epoch_acc:.4f}')
-    model_path = f"resnet18_{experiment_name}_{str(0.02)}_{epoch}.pt"
-    torch.save(model.state_dict(), model_path)
-
+    checkpoint_path = f"resnet18_{experiment_name}_{str(0.02)}_{epoch}.pt"
+    torch.save({
+        'model_state_dict': model.state_dict(),
+        'dataset_idx_to_class': dataset.idx_to_class,
+    }, checkpoint_path)
+    
 # Visualize predictions 
 # dataloader = torch.utils.data.DataLoader(dataset, batch_size=10, shuffle=True, num_workers=1)
 # model.eval()

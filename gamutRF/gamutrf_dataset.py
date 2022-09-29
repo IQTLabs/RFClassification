@@ -15,18 +15,19 @@ from gamutrf.utils import parse_filename
 
 
 class GamutRFDataset(torch.utils.data.Dataset): 
-    def __init__(self, label_dirs, sample_secs=0.02, nfft=1024, transform=None, feat='spec'):
+    def __init__(self, label_dirs, sample_secs=0.02, nfft=1024, transform=None, feat='spec', idx_to_class=None):
         self.feat=feat
         self.sample_secs = sample_secs
         self.nfft = nfft
         labeled_filenames = self.labeled_files(label_dirs)
         self.idx = self.idx_info(labeled_filenames, sample_secs)
- 
-        unique_labels = sorted(list(set(self.idx[:,0])))
-        self.unique_labels = unique_labels
-        self.class_to_idx = {lbl:i for i,lbl in enumerate(self.unique_labels)}
-        self.idx_to_class = {i:lbl for i,lbl in enumerate(self.unique_labels)}
-        
+
+        self.idx_to_class = idx_to_class
+        if self.idx_to_class is None: 
+            unique_labels = sorted(list(set(self.idx[:,0])))
+            self.idx_to_class = {i:lbl for i,lbl in enumerate(unique_labels)}
+        self.class_to_idx = {c: i for i, c in idx_to_class.items()}
+
         self.cmap = plt.get_cmap('jet')
         
         self.transform = transform

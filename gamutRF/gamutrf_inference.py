@@ -6,8 +6,10 @@ from gamutrf_dataset import *
 
 # Load model with pretrained weights
 weights_filepath = "gamutRF/model_weights/resnet18_0.02_3.pt"
-model = GamutRFModel(3, weights_filepath)
+#weights_filepath = "gamutRF/model_weights/resnet18_leesburg_split_0.02_1_current.pt"
+
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+model = GamutRFModel(pretrained_weights=weights_filepath, device=device)
 model = model.to(device)
 model.eval()
 
@@ -19,11 +21,11 @@ label_dirs= {
 }
 sample_secs = 0.02
 nfft = 512
-train_val_test_split = [0.75, 0.05, 0.20]
-batch_size = 8
+train_val_test_split = [0.75, 0.20, 0.05]
+batch_size = 1
 num_workers = 0
 
-dataset = GamutRFDataset(label_dirs, sample_secs=sample_secs, nfft=nfft)
+dataset = GamutRFDataset(label_dirs, sample_secs=sample_secs, nfft=nfft, idx_to_class=model.idx_to_class)
 print(f"\n\n\nDataset class to idx mapping: {dataset.idx_to_class}\n\n\n")
 n_train = int(np.floor(train_val_test_split[0]*len(dataset)))
 n_validation = int(np.floor(train_val_test_split[1]*len(dataset)))
@@ -35,7 +37,6 @@ predictions = []
 labels = []
 with torch.no_grad():
     for j,(data,label) in enumerate(tqdm(test_dataloader)): 
-        #print(f"testing {j}/{len(test_dataloader)}")
 
         data = data.to(device)
         label = label.to(device)
@@ -47,5 +48,5 @@ with torch.no_grad():
 
         #correct = preds == label.data
 
-disp = ConfusionMatrixDisplay.from_predictions(labels, predictions, display_labels=list(dataset.class_to_idx.keys()), normalize='true')
+disp = ConfusionMatrixDisplay.from_predictions(labels, predictions, display_labels=[model.idx_to_class[y] for y in np.unique(predictions+labels)], normalize='true')
 disp.figure_.savefig(f"confusion_matrix_test_set.png")
