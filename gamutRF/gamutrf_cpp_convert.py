@@ -22,9 +22,13 @@ label_dirs= {
     #'wifi_5': ['data/gamutrf-pdx/07_21_2022/wifi_5/']
 }
 
-dataset = GamutRFDataset(label_dirs, sample_secs=sample_secs, nfft=nfft)
-
-#print("input shape = ",dataset[0][0].unsqueeze(0).shape)
-traced_script_module = torch.jit.trace(model, dataset[0][0].unsqueeze(0).to(device))
+try: 
+    dataset = GamutRFDataset(label_dirs, sample_secs=sample_secs, nfft=nfft)
+    #print("input shape = ",dataset[0][0].unsqueeze(0).shape)
+    traced_script_module = torch.jit.trace(model, dataset[0][0].unsqueeze(0).to(device))
+except:
+    example_data = torch.ones((1,3,256,256))
+    print(f"Error using provided data. Using data of shape (1, 3, 256, 256)")
+    traced_script_module = torch.jit.trace(model, example_data.to(device))
 traced_script_module.save(cpp_model_filepath)
-print(f"\n\n\nSaved C++ enabled PyTorch model to {cpp_model_filepath}\n\n\n")
+print(f"\n\nSaved C++ enabled PyTorch model to {cpp_model_filepath}\n\n")
