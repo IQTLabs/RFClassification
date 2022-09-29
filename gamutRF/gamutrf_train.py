@@ -15,6 +15,7 @@ from gamutrf.sample_reader import get_reader
 from gamutrf.utils import parse_filename 
 
 from gamutrf_dataset import * 
+from gamutrf_model import *
 
 
 
@@ -24,7 +25,7 @@ label_dirs= {
     'wifi_5': ['data/gamutrf-pdx/07_21_2022/wifi_5/']
 }
 
-
+experiment_name = 'training'
 sample_secs = 0.02
 nfft = 512
 batch_size = 8
@@ -32,15 +33,15 @@ num_workers = 19
 num_epochs = 4
 train_val_test_split = [0.75, 0.05, 0.20]
 save_iter = 200
-eval_iter = 10000
-leesburg_split = True
-experiment_name = 'leesburg_split'
+eval_iter = 10
+leesburg_split = False
 
 dataset = GamutRFDataset(label_dirs, sample_secs=sample_secs, nfft=nfft)
 print(dataset.idx_to_class)
-#dataset.debug(590)
-
-train_dataset, validation_dataset, test_dataset = torch.utils.data.random_split(dataset, (int(np.ceil(train_val_test_split[0]*len(dataset))), int(np.ceil(train_val_test_split[1]*len(dataset))), int(train_val_test_split[2]*len(dataset))))
+n_train = int(np.floor(train_val_test_split[0]*len(dataset)))
+n_validation = int(np.floor(train_val_test_split[1]*len(dataset)))
+n_test = len(dataset) - n_train - n_validation
+train_dataset, validation_dataset, test_dataset = torch.utils.data.random_split(dataset, (n_train, n_validation, n_test))
 
 if leesburg_split: 
     train_val_test_split = [0.77, 0.03, 0.20]
@@ -66,16 +67,16 @@ test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_siz
 #     plt.title(f"{dataset.idx_to_class[y.item()]}")
 #     plt.show()
 
-model = models.resnet18(weights=torchvision.models.ResNet18_Weights.DEFAULT)
-model.fc = torch.nn.Linear(model.fc.in_features, len(dataset.class_to_idx))
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+model = GamutRFModel(
+    experiment_name=experiment_name, 
+    sample_secs=sample_secs, 
+    nfft=nfft, 
+    label_dirs=label_dirs, 
+    dataset_idx_to_class=dataset.idx_to_class,
+)
 model = model.to(device)
 
-for param in model.parameters():
-    param.requires_grad = False
-for param in model.fc.parameters(): 
-    param.requires_grad = True
-    
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 #optimizer = torch.optim.Adam(model.parameters(), lr=0.03)
@@ -119,11 +120,8 @@ for epoch in range(num_epochs):
         start = timer() 
         
         if (i+1)%save_iter == 0:
-            checkpoint_path = f"resnet18_{experiment_name}_{str(0.02)}_{epoch}_current.pt"
-            torch.save({
-                'model_state_dict': model.state_dict(),
-                'dataset_idx_to_class': dataset.idx_to_class,
-            }, checkpoint_path)
+            checkpoint_path = f"resnet18_{experiment_name}_{sample_secs}_{epoch}_current.pt"
+            model.save_checkpoint(checkpoint_path)
 
         if (i+1)%eval_iter == 0: 
             model.eval()
@@ -142,17 +140,15 @@ for epoch in range(num_epochs):
                     labels.append(label.item())
                     correct = preds == label.data
             disp = ConfusionMatrixDisplay.from_predictions(labels, predictions, display_labels=list(dataset.class_to_idx.keys()), normalize='true')
-            disp.figure_.savefig(f"confusion_matrix_{experiment_name}_{epoch}_{i}.png")
+            disp.figure_.savefig(f"confusion_matrix_validation_{experiment_name}_{epoch}_{i}.png")
             model.train()
     epoch_loss = running_loss / (len(train_dataloader)*batch_size)
     epoch_acc = running_corrects.double() / (len(train_dataloader)*batch_size)
 
     print(f'Loss: {epoch_loss:.4f} Acc: {epoch_acc:.4f}')
-    checkpoint_path = f"resnet18_{experiment_name}_{str(0.02)}_{epoch}.pt"
-    torch.save({
-        'model_state_dict': model.state_dict(),
-        'dataset_idx_to_class': dataset.idx_to_class,
-    }, checkpoint_path)
+    checkpoint_path = f"resnet18_{experiment_name}_{sample_secs}_{epoch}.pt"
+    model.save_checkpoint(checkpoint_path)
+    
     
 # Visualize predictions 
 # dataloader = torch.utils.data.DataLoader(dataset, batch_size=10, shuffle=True, num_workers=1)

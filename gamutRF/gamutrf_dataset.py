@@ -26,7 +26,7 @@ class GamutRFDataset(torch.utils.data.Dataset):
         if self.idx_to_class is None: 
             unique_labels = sorted(list(set(self.idx[:,0])))
             self.idx_to_class = {i:lbl for i,lbl in enumerate(unique_labels)}
-        self.class_to_idx = {c: i for i, c in idx_to_class.items()}
+        self.class_to_idx = {c: i for i, c in self.idx_to_class.items()}
 
         self.cmap = plt.get_cmap('jet')
         
